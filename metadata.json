@@ -1,0 +1,7 @@
+{
+  "name": "P2P Live",
+  "description": "Real-time tracking for UNC Chapel Hill P2P transit.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
