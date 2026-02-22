@@ -8,7 +8,9 @@ import { BusList } from './components/BusList';
 import { BusDetailSheet } from './components/BusDetailSheet';
 import { MapView } from './components/MapView';
 import { PlanTripView } from './components/PlanTripView';
-import { LocateFixed } from 'lucide-react';
+import { LocateFixed, LogIn } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { TeamSection } from './components/TeamSection';
 
 // Default to UNC Student Union if geo denied
 const DEFAULT_LOCATION: Coordinate = { lat: 35.9105, lon: -79.0478 };
@@ -62,7 +64,16 @@ function App() {
            <h1 className="text-2xl font-black text-p2p-blue tracking-tight">P<span className="text-p2p-red">2</span>P <span className="text-p2p-black">Live</span></h1>
            <span className="px-2 py-0.5 bg-p2p-light-red/30 text-p2p-red text-[10px] font-bold uppercase rounded-full tracking-wide">UNC Chapel Hill</span>
         </div>
-        {loadingLoc && <LocateFixed className="animate-spin text-gray-300" size={20} />}
+        <div className="flex items-center gap-3">
+          {loadingLoc && <LocateFixed className="animate-spin text-gray-300" size={20} />}
+          <Link
+            to="/login"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-p2p-blue text-white text-sm font-bold hover:bg-p2p-blue/90 active:scale-[0.98] transition-all shadow-sm"
+          >
+            <LogIn size={18} />
+            Login
+          </Link>
+        </div>
       </header>
 
       {/* Main Content Area */}
@@ -81,6 +92,7 @@ function App() {
               stops={STOPS} 
               onSelectBus={(bus) => setSelectedBus(bus)}
             />
+            <TeamSection />
           </div>
         )}
 
