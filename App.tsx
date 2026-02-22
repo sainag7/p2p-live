@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import { ViewState, Vehicle, Stop, Coordinate, Journey } from './types';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import { ViewState, Vehicle, Stop, Coordinate, Journey, Destination } from './types';
 import { STOPS, VEHICLES } from './data/mockTransit';
 import { findNearestStop } from './utils/geo';
 import { BottomNav } from './components/BottomNav';
@@ -20,6 +20,8 @@ function App() {
   const [selectedStop, setSelectedStop] = useState<Stop | null>(null);
   const [activeJourney, setActiveJourney] = useState<Journey | null>(null);
   const [loadingLoc, setLoadingLoc] = useState(true);
+  /** One-time destination when navigating from map stop "Route to this stop". Consumed by Plan Trip on mount. */
+  const [pendingDestinationForPlan, setPendingDestinationForPlan] = useState<Destination | null>(null);
 
   // Geolocation Setup
   useEffect(() => {
@@ -54,6 +56,15 @@ function App() {
     setView('map');
   };
 
+  const navigateToPlanTrip = useCallback((destination: Destination) => {
+    setPendingDestinationForPlan(destination);
+    setView('plan');
+  }, []);
+
+  const clearPendingDestinationForPlan = useCallback(() => {
+    setPendingDestinationForPlan(null);
+  }, []);
+
   return (
     <div className="h-full w-full flex flex-col bg-gray-50 overflow-hidden relative">
       <AppHeader loadingLoc={loadingLoc} />
@@ -83,6 +94,8 @@ function App() {
             onPlanRoute={handlePlanRoute}
             onViewOnMap={handleViewOnMap}
             existingJourney={activeJourney}
+            pendingDestination={pendingDestinationForPlan}
+            onConsumePendingDestination={clearPendingDestinationForPlan}
           />
         )}
         
@@ -92,6 +105,7 @@ function App() {
               stops={STOPS}
               vehicles={VEHICLES}
               userLocation={userLocation}
+              userLocationResolved={!loadingLoc}
               onSelectBus={(bus) => {
                 setSelectedBus(bus);
                 setSelectedStop(null);
@@ -99,6 +113,7 @@ function App() {
               onSelectStop={(stop) => {
                 setSelectedStop(stop);
               }}
+              onRouteToStop={navigateToPlanTrip}
               selectedStop={selectedStop}
               activeJourney={activeJourney}
               onClearJourney={() => setActiveJourney(null)}

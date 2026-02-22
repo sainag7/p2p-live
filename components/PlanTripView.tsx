@@ -18,13 +18,18 @@ interface PlanTripViewProps {
   onPlanRoute: (journey: Journey) => void;
   onViewOnMap: () => void;
   existingJourney: Journey | null;
+  /** When set (e.g. from map "Route to this stop"), prefill destination and run plan; then clear. */
+  pendingDestination?: Destination | null;
+  onConsumePendingDestination?: () => void;
 }
 
 export const PlanTripView: React.FC<PlanTripViewProps> = ({ 
   userLocation, 
   onPlanRoute, 
   onViewOnMap,
-  existingJourney 
+  existingJourney,
+  pendingDestination,
+  onConsumePendingDestination,
 }) => {
   const [query, setQuery] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
@@ -33,6 +38,25 @@ export const PlanTripView: React.FC<PlanTripViewProps> = ({
   const blurTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => () => { if (blurTimerRef.current) clearTimeout(blurTimerRef.current); }, []);
+
+  // Consume pending destination from map "Route to this stop" deep-link
+  useEffect(() => {
+    if (!pendingDestination || !onConsumePendingDestination) return;
+    const dest = pendingDestination;
+    onConsumePendingDestination();
+    setQuery(dest.name);
+    setSearchFocused(false);
+    addRecentSearch({ label: dest.name, lat: dest.lat, lon: dest.lon });
+    setRecentSearches(getRecentSearches());
+    try {
+      const newJourney = calculateJourney(userLocation, dest);
+      setJourney(newJourney);
+      onPlanRoute(newJourney);
+    } catch (e) {
+      console.error(e);
+      alert('Could not calculate route');
+    }
+  }, [pendingDestination, userLocation, onPlanRoute, onConsumePendingDestination]);
 
   const suggestions = useMemo(() => {
     if (query.trim().length === 0) return [];

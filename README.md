@@ -3,7 +3,9 @@
 **Prerequisites:** Node.js
 
 1. Install dependencies: `npm install`
-2. **API key (server-side only):** Set `GEMINI_API_KEY` in `.env.local` for the Complaints LLM summary feature. Copy [.env.example](.env.example) to `.env.local` and add your key. **Never commit API keys**—keys are used only by the ops API server (`server/index.js`), never in the client bundle.
+2. **Environment variables:** Copy [.env.example](.env.example) to `.env.local` and set:
+   - **`VITE_MAPBOX_TOKEN`** — Mapbox access token (required for the map view). Get one at [mapbox.com](https://www.mapbox.com/). Used only in the client for Mapbox GL JS.
+   - **`GEMINI_API_KEY`** (optional) — For the Complaints LLM summary feature on the ops API server (`server/index.js`). **Never commit API keys.**
 3. Run the app:
    - **Terminal 1:** `npm run dev` (Vite frontend)
    - **Terminal 2:** `npm run server` (Ops API server for `/api/ops/complaints/summary`)
