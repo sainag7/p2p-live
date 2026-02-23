@@ -64,22 +64,69 @@ function createArrowImageData(): { width: number; height: number; data: Uint8Arr
   return { width: size, height: size, data: id.data };
 }
 
-/** Create a simple bus shape for bus icon. */
-function createBusImageData(): { width: number; height: number; data: Uint8Array | Uint8ClampedArray } {
-  const size = 32;
+/** Bus silhouette (side profile) for map marker. Color is fill. */
+function createBusImageDataForColor(
+  fill: string,
+  fillDark: string,
+  windowColor: string
+): { width: number; height: number; data: Uint8Array | Uint8ClampedArray } {
+  const w = 40;
+  const h = 28;
   const canvas = document.createElement('canvas');
-  canvas.width = size;
-  canvas.height = size;
+  canvas.width = w;
+  canvas.height = h;
   const ctx = canvas.getContext('2d')!;
-  ctx.clearRect(0, 0, size, size);
-  ctx.fillStyle = '#333';
-  ctx.fillRect(6, 10, 20, 12);
-  ctx.fillStyle = '#fff';
-  ctx.fillRect(8, 12, 4, 4);
-  ctx.fillRect(14, 12, 4, 4);
-  ctx.fillRect(20, 12, 4, 4);
-  const id = ctx.getImageData(0, 0, size, size);
-  return { width: size, height: size, data: id.data };
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = fillDark;
+  ctx.fillRect(2, 10, 10, 10);
+  ctx.fillStyle = fill;
+  ctx.fillRect(10, 8, 20, 12);
+  ctx.fillStyle = fillDark;
+  ctx.fillRect(28, 10, 10, 10);
+  ctx.fillStyle = windowColor;
+  ctx.fillRect(13, 10, 4, 4);
+  ctx.fillRect(19, 10, 4, 4);
+  ctx.fillRect(25, 10, 4, 4);
+  const id = ctx.getImageData(0, 0, w, h);
+  return { width: w, height: h, data: id.data };
+}
+
+/** Express route: dark/navy bus icon (canvas fallback when SVG fails to load). */
+function createBusExpressImageData() {
+  return createBusImageDataForColor('#1a365d', '#1e3a5f', '#5a7fa3');
+}
+
+/** Baity Hill route: light/bright blue bus icon (canvas fallback). */
+function createBusBaityImageData() {
+  return createBusImageDataForColor('#38bdf8', '#0ea5e9', '#7dd3fc');
+}
+
+/** Tint a black-silhouette image to a single color; returns ImageData-like for addImage. */
+function tintBusImage(
+  img: HTMLImageElement | ImageBitmap,
+  tintHex: string
+): { width: number; height: number; data: Uint8ClampedArray } {
+  const w = img.width;
+  const h = img.height;
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d')!;
+  ctx.drawImage(img, 0, 0);
+  const id = ctx.getImageData(0, 0, w, h);
+  const data = id.data;
+  const r = parseInt(tintHex.slice(1, 3), 16);
+  const g = parseInt(tintHex.slice(3, 5), 16);
+  const b = parseInt(tintHex.slice(5, 7), 16);
+  for (let i = 0; i < data.length; i += 4) {
+    const a = data[i + 3];
+    if (a > 0) {
+      data[i] = r;
+      data[i + 1] = g;
+      data[i + 2] = b;
+    }
+  }
+  return { width: w, height: h, data };
 }
 
 function emptyFC(): GeoJSONFC {
@@ -283,11 +330,13 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
           });
           const hasBusesSource = !!map.getSource(BUSES_SOURCE);
           const hasBusesLayer = !!map.getLayer(BUSES_LAYER);
-          const hasBusIcon = map.hasImage('bus-icon');
+          const hasBusExpress = map.hasImage('bus-express');
+          const hasBusBaity = map.hasImage('bus-baity');
           console.log('[Mapbox buses]', {
             [`map.getSource("${BUSES_SOURCE}")`]: hasBusesSource,
             [`map.getLayer("${BUSES_LAYER}")`]: hasBusesLayer,
-            'map.hasImage("bus-icon")': hasBusIcon,
+            'map.hasImage("bus-express")': hasBusExpress,
+            'map.hasImage("bus-baity")': hasBusBaity,
           });
         }, 500);
       }
@@ -322,40 +371,66 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
       map.addSource(USER_SOURCE, { type: 'geojson', data: emptyFC() });
       map.addSource(JOURNEY_SOURCE, { type: 'geojson', data: emptyFC() });
 
-      let busIconAdded = false;
-      try {
-        const busImg = createBusImageData();
-        map.addImage('bus-icon', busImg, { sdf: false });
-        busIconAdded = true;
-      } catch (e) {
-        if (isDev) console.warn('[Mapbox buses] bus-icon addImage failed', e);
-      }
-
-      map.addLayer({
-        id: BUSES_LAYER,
-        type: busIconAdded ? 'symbol' : 'circle',
-        source: BUSES_SOURCE,
-        ...(busIconAdded
-          ? {
-              layout: {
-                'icon-image': 'bus-icon',
-                'icon-size': 0.55,
-                'icon-rotate': ['get', 'bearing'],
-                'icon-rotation-alignment': 'map',
-                'icon-allow-overlap': true,
-                'icon-ignore-placement': true,
-              },
-              paint: {},
-            }
-          : {
+      const BUS_ICON_EXPRESS_COLOR = '#1d4ed8';
+      const BUS_ICON_BAITY_COLOR = '#e07c7c';
+      type BusImageInput = HTMLImageElement | ImageBitmap | { width: number; height: number; data: Uint8Array | Uint8ClampedArray };
+      const addBusesSymbolLayer = (expressImg: BusImageInput, baityImg: BusImageInput) => {
+        if (!map.hasImage('bus-express')) map.addImage('bus-express', expressImg as any, { sdf: false });
+        if (!map.hasImage('bus-baity')) map.addImage('bus-baity', baityImg as any, { sdf: false });
+        map.addLayer({
+          id: BUSES_LAYER,
+          type: 'symbol',
+          source: BUSES_SOURCE,
+          layout: {
+            'icon-image': ['match', ['get', 'routeId'], 'p2p-express', 'bus-express', 'bus-baity'],
+            'icon-size': 0.75,
+            'icon-rotate': ['get', 'bearing'],
+            'icon-rotation-alignment': 'map',
+            'icon-allow-overlap': true,
+            'icon-ignore-placement': true,
+          },
+          paint: {},
+        });
+      };
+      new Promise<HTMLImageElement | ImageBitmap | null>((resolve) => {
+        map.loadImage('/icons/front-of-bus.png', (err, img) =>
+          resolve(err ? null : (img as HTMLImageElement | ImageBitmap | null) ?? null)
+        );
+      })
+        .then((baseImg) => {
+          if (baseImg) {
+            const expressTinted = tintBusImage(baseImg as HTMLImageElement | ImageBitmap, BUS_ICON_EXPRESS_COLOR);
+            const baityTinted = tintBusImage(baseImg as HTMLImageElement | ImageBitmap, BUS_ICON_BAITY_COLOR);
+            addBusesSymbolLayer(expressTinted, baityTinted);
+            return;
+          }
+          return Promise.all([
+            new Promise<BusImageInput>((resolve, reject) => {
+              map.loadImage('/icons/bus-express.svg', (err, img) => (err ? reject(err) : resolve((img ?? null) as BusImageInput)));
+            }),
+            new Promise<BusImageInput>((resolve, reject) => {
+              map.loadImage('/icons/bus-baity.svg', (err, img) => (err ? reject(err) : resolve((img ?? null) as BusImageInput)));
+            }),
+          ]).then(([expressImg, baityImg]) => addBusesSymbolLayer(expressImg, baityImg));
+        })
+        .catch(() => {
+          try {
+            addBusesSymbolLayer(createBusExpressImageData(), createBusBaityImageData());
+          } catch (e) {
+            if (isDev) console.warn('[Mapbox buses] canvas fallback failed', e);
+            map.addLayer({
+              id: BUSES_LAYER,
+              type: 'circle',
+              source: BUSES_SOURCE,
               paint: {
                 'circle-radius': 10,
-                'circle-color': ['case', ['==', ['get', 'routeId'], 'p2p-express'], '#418FC5', '#C33934'],
+                'circle-color': ['case', ['==', ['get', 'routeId'], 'p2p-express'], BUS_ICON_EXPRESS_COLOR, BUS_ICON_BAITY_COLOR],
                 'circle-stroke-width': 2,
                 'circle-stroke-color': '#fff',
               },
-            }),
-      });
+            });
+          }
+        });
 
       map.addLayer({
         id: USER_HALO_LAYER,
@@ -668,23 +743,45 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
     <div className={`relative w-full h-full ${className}`}>
       <div ref={containerRef} className="absolute inset-0 w-full h-full" />
       {isDev && mapReady && (
-        <div className="absolute top-2 left-2 z-10 flex flex-wrap gap-2 items-center bg-white/95 rounded-lg shadow border border-gray-200 p-2 text-sm">
-          <span className="text-gray-500 font-mono text-xs">Buses: {vehicles.length}</span>
-          <label className="flex items-center gap-1.5 cursor-pointer">
+        <div
+          className="absolute top-2 left-2 z-10 flex flex-wrap items-center gap-3 bg-white/95 rounded-xl shadow-md border border-gray-200/80 p-3"
+          style={{ fontFamily: "'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif" }}
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-base font-semibold tracking-tight text-[#418FC5]">Buses</span>
+            <span className="inline-flex min-w-[28px] items-center justify-center rounded-lg bg-[#418FC5]/15 px-2 py-0.5 text-sm font-bold text-[#418FC5]">
+              {vehicles.length}
+            </span>
+          </div>
+          <label className="flex cursor-pointer items-center gap-3 rounded focus-within:ring-2 focus-within:ring-[#418FC5]/40 focus-within:ring-offset-1">
             <input
               type="checkbox"
               checked={showExpress}
               onChange={(e) => setShowExpress(e.target.checked)}
+              className="h-4 w-4 shrink-0 cursor-pointer rounded-[6px] border-2 border-gray-300 bg-white shadow-sm transition-all duration-200 appearance-none hover:border-gray-400 focus:ring-0 focus:ring-offset-0 checked:border-[#418FC5] checked:bg-[#418FC5] checked:bg-[length:12px_12px] checked:bg-center checked:bg-no-repeat"
+              style={{
+                backgroundImage: showExpress
+                  ? "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12l5 5L20 7'/%3E%3C/svg%3E\")"
+                  : undefined,
+              }}
+              aria-label="Toggle P2P Express route"
             />
-            <span style={{ color: ROUTE_COLORS.P2P_EXPRESS }}>P2P Express</span>
+            <span className="text-sm font-medium" style={{ color: ROUTE_COLORS.P2P_EXPRESS }}>P2P Express</span>
           </label>
-          <label className="flex items-center gap-1.5 cursor-pointer">
+          <label className="flex cursor-pointer items-center gap-3 rounded focus-within:ring-2 focus-within:ring-[#C33934]/40 focus-within:ring-offset-1">
             <input
               type="checkbox"
               checked={showBaity}
               onChange={(e) => setShowBaity(e.target.checked)}
+              className="h-4 w-4 shrink-0 cursor-pointer rounded-[6px] border-2 border-gray-300 bg-white shadow-sm transition-all duration-200 appearance-none hover:border-gray-400 focus:ring-0 focus:ring-offset-0 checked:border-[#C33934] checked:bg-[#C33934] checked:bg-[length:12px_12px] checked:bg-center checked:bg-no-repeat"
+              style={{
+                backgroundImage: showBaity
+                  ? "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12l5 5L20 7'/%3E%3C/svg%3E\")"
+                  : undefined,
+              }}
+              aria-label="Toggle Baity Hill route"
             />
-            <span style={{ color: ROUTE_COLORS.BAITY_HILL }}>Baity Hill</span>
+            <span className="text-sm font-medium" style={{ color: ROUTE_COLORS.BAITY_HILL }}>Baity Hill</span>
           </label>
         </div>
       )}

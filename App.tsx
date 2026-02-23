@@ -78,7 +78,19 @@ function App() {
       <main className="flex-1 relative overflow-hidden">
         {view === 'list' && (
           <div className="h-full overflow-y-auto no-scrollbar pb-20">
-            <div className="px-4 pt-4 flex items-center justify-between">
+            {/* Closest Stop section: header tight to card */}
+            {closestStop && (
+              <div className="px-4 pt-4">
+                <h2 className="text-gray-900 font-bold text-lg mb-1">Closest Stop to You</h2>
+                <ClosestStopCard 
+                  stop={closestStop} 
+                  userLocation={userLocation} 
+                  vehicles={vehicles}
+                />
+              </div>
+            )}
+            {/* Active Buses section: more space above header, then list */}
+            <div className="px-4 pt-6 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <h2 className="text-gray-900 font-bold text-lg">Active Buses</h2>
                 {lastUpdated != null && (
@@ -98,13 +110,6 @@ function App() {
                 Refresh
               </button>
             </div>
-            {closestStop && (
-              <ClosestStopCard 
-                stop={closestStop} 
-                userLocation={userLocation} 
-                vehicles={vehicles}
-              />
-            )}
             <BusList 
               vehicles={vehicles} 
               stops={STOPS} 
