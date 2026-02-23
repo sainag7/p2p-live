@@ -3,6 +3,8 @@
  * GEMINI_API_KEY / MAPBOX_TOKEN must be set in environment; never exposed to client.
  */
 
+require("dotenv").config();
+
 const http = require('http');
 const path = require('path');
 const fs = require('fs');
