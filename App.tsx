@@ -92,6 +92,7 @@ function App() {
               stops={STOPS}
               vehicles={VEHICLES}
               userLocation={userLocation}
+              userLocationResolved={!loadingLoc}
               onSelectBus={(bus) => {
                 setSelectedBus(bus);
                 setSelectedStop(null);

@@ -1,28 +1,16 @@
 /**
- * Mini map showing driver's current location. Uses Leaflet (same as student map).
- * TODO: Replace with live bus position from API when available.
+ * Mini map showing driver's current location. Uses Mapbox GL JS.
  */
 
-import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
-import L from 'leaflet';
+import React, { useState, useEffect, useRef } from 'react';
+import mapboxgl from 'mapbox-gl';
+import type { Map as MapboxMapType, GeoJSONSource } from 'mapbox-gl';
 
-const DEFAULT_CENTER = { lat: 35.9105, lon: -79.0478 }; // UNC Student Union
+const DEFAULT_CENTER: [number, number] = [-79.0478, 35.9105];
+const DRIVER_SOURCE = 'driver-location-source';
+const DRIVER_LAYER = 'driver-location-layer';
 
-const driverIcon = L.divIcon({
-  className: 'driver-location-icon',
-  html: `<div style="background-color: #418FC5; width: 28px; height: 28px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3);"></div>`,
-  iconSize: [28, 28],
-  iconAnchor: [14, 14],
-});
-
-function Recenter({ center, zoom }: { center: { lat: number; lon: number }; zoom?: number }) {
-  const map = useMap();
-  useEffect(() => {
-    map.setView([center.lat, center.lon], zoom ?? map.getZoom());
-  }, [center.lat, center.lon, zoom, map]);
-  return null;
-}
+const token = typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_MAPBOX_TOKEN;
 
 interface DriverLocationMapProps {
   className?: string;
@@ -30,12 +18,14 @@ interface DriverLocationMapProps {
 }
 
 export function DriverLocationMap({ className = '', height = 240 }: DriverLocationMapProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<MapboxMapType | null>(null);
   const [position, setPosition] = useState<{ lat: number; lon: number } | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!('geolocation' in navigator)) {
-      setPosition(DEFAULT_CENTER);
+      setPosition({ lat: DEFAULT_CENTER[1], lon: DEFAULT_CENTER[0] });
       setLoading(false);
       return;
     }
@@ -45,35 +35,82 @@ export function DriverLocationMap({ className = '', height = 240 }: DriverLocati
         setLoading(false);
       },
       () => {
-        setPosition(DEFAULT_CENTER);
+        setPosition({ lat: DEFAULT_CENTER[1], lon: DEFAULT_CENTER[0] });
         setLoading(false);
       },
       { enableHighAccuracy: true }
     );
   }, []);
 
-  const center = position ?? DEFAULT_CENTER;
+  useEffect(() => {
+    if (!containerRef.current || !token || position === null) return;
+    const map = new mapboxgl.Map({
+      container: containerRef.current,
+      accessToken: token,
+      style: 'mapbox://styles/mapbox/streets-v12',
+      center: [position.lon, position.lat],
+      zoom: 15,
+    });
+    map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    map.on('load', () => {
+      map.addSource(DRIVER_SOURCE, {
+        type: 'geojson',
+        data: {
+          type: 'FeatureCollection',
+          features: [
+            {
+              type: 'Feature',
+              geometry: { type: 'Point', coordinates: [position.lon, position.lat] },
+              properties: {},
+            },
+          ],
+        },
+      });
+      map.addLayer({
+        id: DRIVER_LAYER,
+        type: 'circle',
+        source: DRIVER_SOURCE,
+        paint: {
+          'circle-radius': 14,
+          'circle-color': '#418FC5',
+          'circle-stroke-width': 3,
+          'circle-stroke-color': '#fff',
+        },
+      });
+    });
+    mapRef.current = map;
+    return () => {
+      map.remove();
+      mapRef.current = null;
+    };
+  }, [token, position?.lat, position?.lon]);
 
+  if (!token) {
+    return (
+      <div
+        className={`rounded-2xl border border-gray-100 shadow-sm overflow-hidden bg-gray-100 flex items-center justify-center text-gray-500 text-sm ${className}`}
+        style={{ height: `${height}px` }}
+      >
+        Set VITE_MAPBOX_TOKEN for map
+      </div>
+    );
+  }
+  if (loading) {
+    return (
+      <div
+        className={`rounded-2xl border border-gray-100 shadow-sm overflow-hidden bg-gray-100 flex items-center justify-center text-gray-500 text-sm ${className}`}
+        style={{ height: `${height}px` }}
+      >
+        Getting location…
+      </div>
+    );
+  }
   return (
-    <div className={`rounded-2xl border border-gray-100 shadow-sm overflow-hidden bg-gray-100 ${className}`} style={{ height: `${height}px` }}>
-      {loading ? (
-        <div className="w-full h-full flex items-center justify-center text-gray-500 text-sm">Getting location…</div>
-      ) : (
-        <MapContainer
-          center={[center.lat, center.lon]}
-          zoom={15}
-          className="w-full h-full rounded-2xl"
-          style={{ height: '100%' }}
-          scrollWheelZoom={false}
-        >
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          <Marker position={[center.lat, center.lon]} icon={driverIcon} />
-          <Recenter center={center} zoom={15} />
-        </MapContainer>
-      )}
+    <div
+      className={`rounded-2xl border border-gray-100 shadow-sm overflow-hidden bg-gray-100 ${className}`}
+      style={{ height: `${height}px` }}
+    >
+      <div ref={containerRef} className="w-full h-full" />
     </div>
   );
 }
