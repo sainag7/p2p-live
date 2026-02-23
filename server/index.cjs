@@ -3,13 +3,15 @@
  * GEMINI_API_KEY / MAPBOX_TOKEN must be set in environment; never exposed to client.
  */
 
-require("dotenv").config();
+if (process.env.NODE_ENV !== "production") {
+  require("dotenv").config();
+}
 
 const http = require('http');
 const path = require('path');
 const fs = require('fs');
 
-const PORT = process.env.OPS_API_PORT || 3001;
+const PORT = process.env.PORT || process.env.OPS_API_PORT || 3001;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
 const MAPBOX_TOKEN = process.env.MAPBOX_TOKEN;
@@ -225,7 +227,19 @@ async function handleComplaintsSummary(req, body, res) {
 }
 
 const server = http.createServer((req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  const allowedOrigins = [
+    'https://p2pnow.netlify.app',
+    'http://localhost:3001', // for local dev
+  ];
+  
+  const origin = req.headers.origin;
+  
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') {
     res.writeHead(204);
     res.end();
@@ -328,5 +342,5 @@ server.listen(PORT, () => {
   if (!MAPBOX_TOKEN) {
     console.warn('Warning: MAPBOX_TOKEN not set. /api/mapbox/route will return 500.');
   }
-  console.log(`Ops API server listening on http://localhost:${PORT}`);
+  console.log(`API server listening on http://localhost:${PORT}`);
 });
