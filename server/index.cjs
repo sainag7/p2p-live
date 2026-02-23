@@ -238,6 +238,12 @@ const server = http.createServer((req, res) => {
     res.setHeader('Access-Control-Allow-Origin', origin);
   }
   
+  if (req.url === "/healthz" && req.method === "GET") {
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ ok: true }));
+    return;
+  }
+
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') {
@@ -335,12 +341,12 @@ const server = http.createServer((req, res) => {
   res.end();
 });
 
-server.listen(PORT, () => {
+server.listen(PORT, "0.0.0.0", () => {
   if (!GEMINI_API_KEY) {
     console.warn('Warning: GEMINI_API_KEY not set. /api/ops/complaints/summary will return 500.');
   }
   if (!MAPBOX_TOKEN) {
     console.warn('Warning: MAPBOX_TOKEN not set. /api/mapbox/route will return 500.');
   }
-  console.log(`API server listening on http://localhost:${PORT}`);
+  console.log(`API server listening on port ${PORT}`);
 });
