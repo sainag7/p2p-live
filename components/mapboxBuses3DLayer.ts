@@ -24,10 +24,12 @@ interface BusFeature {
 
 interface Buses3DLayerOptions {
   onSelectBus?: (busId: string) => void;
+  /** Returns routeIds that are currently enabled (e.g. from checkbox state). Only these buses are rendered. */
+  getEnabledRouteIds?: () => string[];
 }
 
 export function createBuses3DLayer(options: Buses3DLayerOptions = {}): mapboxgl.CustomLayerInterface {
-  const { onSelectBus } = options;
+  const { onSelectBus, getEnabledRouteIds } = options;
   let map: Map | null = null;
   let camera: THREE.Camera | null = null;
   let scene: THREE.Scene | null = null;
@@ -35,7 +37,6 @@ export function createBuses3DLayer(options: Buses3DLayerOptions = {}): mapboxgl.
   let busMeshes: THREE.Group[] = [];
   let modelTemplate: THREE.Group | null = null;
   let meterInMercator: number = 1;
-  let renderFrameCount = 0;
 
   return {
     id: 'buses-3d-layer',
@@ -124,33 +125,21 @@ export function createBuses3DLayer(options: Buses3DLayerOptions = {}): mapboxgl.
     },
 
     render(gl: WebGLRenderingContext, matrix: number[]) {
-      renderFrameCount += 1;
-      const throttle = 60;
-      const doLog = renderFrameCount <= 3 || renderFrameCount % throttle === 0;
-
       if (!map || !scene || !camera || !renderer) return;
 
       if (!modelTemplate) {
-        if (doLog) {
-          // #region agent log
-          fetch('http://127.0.0.1:7528/ingest/b677942a-21e0-4f79-b20d-92f471fe2b80',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9bb456'},body:JSON.stringify({sessionId:'9bb456',hypothesisId:'H2',location:'mapboxBuses3DLayer.ts:render',message:'render called but no modelTemplate',data:{frame:renderFrameCount},timestamp:Date.now()})}).catch(()=>{});
-          // #endregion
-        }
         map.triggerRepaint();
         return;
       }
 
       const src = map.getSource(BUSES_SOURCE_ID) as { _data?: { features?: BusFeature[] }; serialize?: () => { data?: unknown } } | undefined;
       const raw = src ? (src as any)._data : undefined;
-      const features: BusFeature[] = Array.isArray(raw?.features) ? raw.features : [];
-
-      if (doLog) {
-        // #region agent log
-        fetch('http://127.0.0.1:7528/ingest/b677942a-21e0-4f79-b20d-92f471fe2b80',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9bb456'},body:JSON.stringify({sessionId:'9bb456',hypothesisId:'H1',location:'mapboxBuses3DLayer.ts:render',message:'source data in render',data:{frame:renderFrameCount,srcExists:!!src,rawExists:!!raw,rawKeys:raw?Object.keys(raw):null,featuresLength:features.length,firstFeature:features[0]?{coords:features[0].geometry?.coordinates,props:features[0].properties}:null},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
-      }
+      const allFeatures: BusFeature[] = Array.isArray(raw?.features) ? raw.features : [];
+      const enabledSet = new Set(getEnabledRouteIds?.() ?? ['p2p-express', 'baity-hill']);
+      const features = allFeatures.filter((f) => enabledSet.has(f.properties?.routeId ?? ''));
 
       if (features.length === 0) {
+        busMeshes.forEach((mesh) => { mesh.visible = false; });
         renderer.resetState();
         map.triggerRepaint();
         return;
@@ -164,13 +153,6 @@ export function createBuses3DLayer(options: Buses3DLayerOptions = {}): mapboxgl.
 
         const scale = meterInMercator * BUS_LENGTH_METERS;
         const bearingOffsetRad = (BEARING_OFFSET_DEG * Math.PI) / 180;
-
-        if (doLog) {
-          const m0 = mapboxgl.MercatorCoordinate.fromLngLat(first.geometry.coordinates, 0.5);
-          // #region agent log
-          fetch('http://127.0.0.1:7528/ingest/b677942a-21e0-4f79-b20d-92f471fe2b80',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9bb456'},body:JSON.stringify({sessionId:'9bb456',hypothesisId:'H3',location:'mapboxBuses3DLayer.ts:render',message:'position and scale',data:{frame:renderFrameCount,scale,mercX:m0.x,mercY:m0.y,mercZ:m0.z,matrixLen:matrix?.length},timestamp:Date.now()})}).catch(()=>{});
-          // #endregion
-        }
 
         features.slice(0, MAX_BUS_MESHES).forEach((f, i) => {
           const mesh = busMeshes[i];
@@ -195,16 +177,8 @@ export function createBuses3DLayer(options: Buses3DLayerOptions = {}): mapboxgl.
         camera.projectionMatrixInverse.copy(camera.projectionMatrix).invert();
         renderer.resetState();
         renderer.render(scene, camera);
-        if (doLog) {
-          // #region agent log
-          fetch('http://127.0.0.1:7528/ingest/b677942a-21e0-4f79-b20d-92f471fe2b80',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9bb456'},body:JSON.stringify({sessionId:'9bb456',hypothesisId:'H4',location:'mapboxBuses3DLayer.ts:render',message:'after renderer.render',data:{frame:renderFrameCount},timestamp:Date.now()})}).catch(()=>{});
-          // #endregion
-        }
       } catch (e) {
         if (IS_DEV) console.warn('[buses-3d] render error:', e);
-        // #region agent log
-        fetch('http://127.0.0.1:7528/ingest/b677942a-21e0-4f79-b20d-92f471fe2b80',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9bb456'},body:JSON.stringify({sessionId:'9bb456',hypothesisId:'H5',location:'mapboxBuses3DLayer.ts:render',message:'render throw',data:{frame:renderFrameCount,err:String(e)},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
       }
       map.triggerRepaint();
     },

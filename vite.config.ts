@@ -7,8 +7,9 @@ export default defineConfig({
   server: {
     port: 3000,
     host: '0.0.0.0',
+    // Ops API runs on 3001 by default (npm run server). Do not use 3000 for API or GET / will 404.
     proxy: {
-      '/api': { target: 'http://localhost:3000', changeOrigin: true },
+      '/api': { target: 'http://localhost:3001', changeOrigin: true },
     },
   },
   plugins: [react()],

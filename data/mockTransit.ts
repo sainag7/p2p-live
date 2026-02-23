@@ -9,7 +9,7 @@ export const ROUTES: Route[] = [
 
 export const VEHICLES: Vehicle[] = [
   {
-    id: 'bus-104',
+    id: 'bus-101',
     routeId: 'p2p-express',
     routeName: 'P2P Express',
     lat: 35.9110,
@@ -24,7 +24,7 @@ export const VEHICLES: Vehicle[] = [
     ]
   },
   {
-    id: 'bus-202',
+    id: 'bus-201',
     routeId: 'baity-hill',
     routeName: 'Baity Hill',
     lat: 35.9010,
@@ -39,7 +39,7 @@ export const VEHICLES: Vehicle[] = [
     ]
   },
   {
-    id: 'bus-108',
+    id: 'bus-102',
     routeId: 'p2p-express',
     routeName: 'P2P Express',
     lat: 35.9040,
@@ -52,7 +52,22 @@ export const VEHICLES: Vehicle[] = [
       { stopId: 'p2p-express-20', etaMin: 6 },
       { stopId: 'p2p-express-9', etaMin: 10 },
     ]
-  }
+  },
+  {
+    id: 'bus-202',
+    routeId: 'baity-hill',
+    routeName: 'Baity Hill',
+    lat: 35.9010,
+    lon: -79.0420,
+    heading: 180,
+    nextStopId: 'baity-hill-1',
+    nextStopEtaMin: 1,
+    upcomingStops: [
+      { stopId: 'baity-hill-1', etaMin: 4 },
+      { stopId: 'baity-hill-2', etaMin: 9 },
+      { stopId: 'baity-hill-5', etaMin: 11 },
+    ]
+  },
 ];
 
 export const MOCK_DESTINATIONS: Destination[] = [

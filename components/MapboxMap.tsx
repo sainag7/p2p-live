@@ -232,6 +232,7 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
   }>({ P2P_EXPRESS: null, BAITY_HILL: null });
   const busDistMetersRef = useRef<Record<string, number>>({});
   const lastTickRef = useRef<number>(0);
+  const enabledBusRoutesRef = useRef({ showExpress: true, showBaity: true });
 
   const token = typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_MAPBOX_TOKEN;
   const isDev = typeof import.meta !== 'undefined' && (import.meta as any).env?.DEV;
@@ -377,6 +378,19 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
       const BUS_ICON_EXPRESS_COLOR = '#1d4ed8';
       const BUS_ICON_BAITY_COLOR = '#e07c7c';
       type BusImageInput = HTMLImageElement | ImageBitmap | { width: number; height: number; data: Uint8Array | Uint8ClampedArray };
+      const applyBusLayerFilter = () => {
+        const { showExpress, showBaity } = enabledBusRoutesRef.current;
+        const enabledRouteIds: string[] = [];
+        if (showExpress) enabledRouteIds.push('p2p-express');
+        if (showBaity) enabledRouteIds.push('baity-hill');
+        try {
+          if (!map.getLayer(BUSES_LAYER)) return;
+          if (enabledRouteIds.length === 0) map.setFilter(BUSES_LAYER, ['==', ['get', 'routeId'], '']);
+          else map.setFilter(BUSES_LAYER, ['in', ['get', 'routeId'], ['literal', enabledRouteIds]]);
+        } catch {
+          /* ignore */
+        }
+      };
       const addBusesSymbolLayer = (expressImg: BusImageInput, baityImg: BusImageInput) => {
         if (!map.hasImage('bus-express')) map.addImage('bus-express', expressImg as any, { sdf: false });
         if (!map.hasImage('bus-baity')) map.addImage('bus-baity', baityImg as any, { sdf: false });
@@ -386,7 +400,7 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
           source: BUSES_SOURCE,
           layout: {
             'icon-image': ['match', ['get', 'routeId'], 'p2p-express', 'bus-express', 'bus-baity'],
-            'icon-size': 0.75,
+            'icon-size': 0.35,
             'icon-rotate': ['get', 'bearing'],
             'icon-rotation-alignment': 'map',
             'icon-allow-overlap': true,
@@ -394,17 +408,23 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
           },
           paint: {},
         });
+        applyBusLayerFilter();
       };
-      new Promise<HTMLImageElement | ImageBitmap | null>((resolve) => {
-        map.loadImage('/icons/front-of-bus.png', (err, img) =>
-          resolve(err ? null : (img as HTMLImageElement | ImageBitmap | null) ?? null)
-        );
-      })
-        .then((baseImg) => {
-          if (baseImg) {
-            const expressTinted = tintBusImage(baseImg as HTMLImageElement | ImageBitmap, BUS_ICON_EXPRESS_COLOR);
-            const baityTinted = tintBusImage(baseImg as HTMLImageElement | ImageBitmap, BUS_ICON_BAITY_COLOR);
-            addBusesSymbolLayer(expressTinted, baityTinted);
+      Promise.all([
+        new Promise<BusImageInput | null>((resolve) => {
+          map.loadImage('/icons/bus-express.png', (err, img) =>
+            resolve(err ? null : (img as BusImageInput | null) ?? null)
+          );
+        }),
+        new Promise<BusImageInput | null>((resolve) => {
+          map.loadImage('/icons/bus-baity.png', (err, img) =>
+            resolve(err ? null : (img as BusImageInput | null) ?? null)
+          );
+        }),
+      ])
+        .then(([expressImg, baityImg]) => {
+          if (expressImg && baityImg) {
+            addBusesSymbolLayer(expressImg, baityImg);
             return;
           }
           return Promise.all([
@@ -414,7 +434,7 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
             new Promise<BusImageInput>((resolve, reject) => {
               map.loadImage('/icons/bus-baity.svg', (err, img) => (err ? reject(err) : resolve((img ?? null) as BusImageInput)));
             }),
-          ]).then(([expressImg, baityImg]) => addBusesSymbolLayer(expressImg, baityImg));
+          ]).then(([e, b]) => addBusesSymbolLayer(e, b));
         })
         .catch(() => {
           try {
@@ -432,6 +452,7 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
                 'circle-stroke-color': '#fff',
               },
             });
+            applyBusLayerFilter();
           }
         });
 
@@ -716,6 +737,8 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
     };
   }, [mapReady, stops, vehicles, onSelectBus, onSelectStop]);
 
+  enabledBusRoutesRef.current = { showExpress, showBaity };
+
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapReady) return;
@@ -734,6 +757,20 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
         /* ignore */
       }
     });
+    const enabledRouteIds: string[] = [];
+    if (showExpress) enabledRouteIds.push('p2p-express');
+    if (showBaity) enabledRouteIds.push('baity-hill');
+    try {
+      if (map.getLayer(BUSES_LAYER)) {
+        if (enabledRouteIds.length === 0) {
+          map.setFilter(BUSES_LAYER, ['==', ['get', 'routeId'], '']);
+        } else {
+          map.setFilter(BUSES_LAYER, ['in', ['get', 'routeId'], ['literal', enabledRouteIds]]);
+        }
+      }
+    } catch {
+      /* ignore */
+    }
   }, [mapReady, showExpress, showBaity]);
 
   // Dev-only: keypress to toggle extreme arrow style (debug)
