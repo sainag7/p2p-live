@@ -12,8 +12,7 @@ export const BusList: React.FC<BusListProps> = ({ vehicles, stops, onSelectBus }
   const getStopName = (id: string) => stops.find(s => s.id === id)?.name || 'Unknown Stop';
 
   return (
-    <div className="px-4 pb-24 pt-6">
-      <h2 className="text-gray-900 font-bold text-lg mb-4">Active Buses</h2>
+    <div className="px-4 pb-24 pt-2">
       <div className="space-y-3">
         {vehicles.map((bus) => (
           <button

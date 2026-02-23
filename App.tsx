@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { ViewState, Vehicle, Stop, Coordinate, Journey } from './types';
 import { STOPS, VEHICLES } from './data/mockTransit';
 import { findNearestStop } from './utils/geo';
@@ -9,6 +9,7 @@ import { BusDetailSheet } from './components/BusDetailSheet';
 import { MapView } from './components/MapView';
 import { PlanTripView } from './components/PlanTripView';
 import { AppHeader } from './components/AppHeader';
+import { RefreshCw } from 'lucide-react';
 
 // Default to UNC Student Union if geo denied
 const DEFAULT_LOCATION: Coordinate = { lat: 35.9105, lon: -79.0478 };
@@ -20,6 +21,9 @@ function App() {
   const [selectedStop, setSelectedStop] = useState<Stop | null>(null);
   const [activeJourney, setActiveJourney] = useState<Journey | null>(null);
   const [loadingLoc, setLoadingLoc] = useState(true);
+  const [vehicles, setVehicles] = useState<Vehicle[]>(VEHICLES);
+  const [refreshLoading, setRefreshLoading] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<number | null>(null);
 
   // Geolocation Setup
   useEffect(() => {
@@ -54,6 +58,18 @@ function App() {
     setView('map');
   };
 
+  const handleRefreshEtas = useCallback(async () => {
+    setRefreshLoading(true);
+    try {
+      // TODO: replace with real API when available, e.g. fetch('/api/vehicles/etas')
+      await new Promise((r) => setTimeout(r, 800));
+      setVehicles((prev) => [...prev]);
+      setLastUpdated(Date.now());
+    } finally {
+      setRefreshLoading(false);
+    }
+  }, []);
+
   return (
     <div className="h-full w-full flex flex-col bg-gray-50 overflow-hidden relative">
       <AppHeader loadingLoc={loadingLoc} />
@@ -62,15 +78,35 @@ function App() {
       <main className="flex-1 relative overflow-hidden">
         {view === 'list' && (
           <div className="h-full overflow-y-auto no-scrollbar pb-20">
+            <div className="px-4 pt-4 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <h2 className="text-gray-900 font-bold text-lg">Active Buses</h2>
+                {lastUpdated != null && (
+                  <span className="text-xs text-gray-400">
+                    Updated {lastUpdated > Date.now() - 60000 ? 'just now' : new Date(lastUpdated).toLocaleTimeString()}
+                  </span>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={handleRefreshEtas}
+                disabled={refreshLoading}
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-p2p-light-blue/50 text-p2p-blue text-sm font-semibold hover:bg-p2p-light-blue/70 disabled:opacity-60 disabled:pointer-events-none"
+                aria-label="Refresh ETAs"
+              >
+                <RefreshCw size={18} className={refreshLoading ? 'animate-spin' : ''} />
+                Refresh
+              </button>
+            </div>
             {closestStop && (
               <ClosestStopCard 
                 stop={closestStop} 
                 userLocation={userLocation} 
-                vehicles={VEHICLES}
+                vehicles={vehicles}
               />
             )}
             <BusList 
-              vehicles={VEHICLES} 
+              vehicles={vehicles} 
               stops={STOPS} 
               onSelectBus={(bus) => setSelectedBus(bus)}
             />
@@ -90,7 +126,7 @@ function App() {
           <div className="h-full w-full relative">
             <MapView 
               stops={STOPS}
-              vehicles={VEHICLES}
+              vehicles={vehicles}
               userLocation={userLocation}
               userLocationResolved={!loadingLoc}
               onSelectBus={(bus) => {
