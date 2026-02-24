@@ -12,6 +12,7 @@ import { Stop, Vehicle, Coordinate, Journey } from '../types';
 import { P2P_EXPRESS_STOPS, BAITY_HILL_STOPS } from '../data/p2pStops';
 import { createRouteInterpolator, type LngLat } from '../utils/routeInterpolation';
 import { Navigation } from 'lucide-react';
+import { API } from '../utils/api';
 
 type GeoJSONFC = { type: 'FeatureCollection'; features: Array<{ type: 'Feature'; geometry: { type: 'Point'; coordinates: number[] } | { type: 'LineString'; coordinates: [number, number][] }; properties: Record<string, unknown> }> };
 
@@ -606,9 +607,9 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
   useEffect(() => {
     if (!mapReady || !mapRef.current) return;
     const map = mapRef.current;
-    const base = (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_OPS_API_URL) || '';
+    //const base = (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_OPS_API_URL) || '';
     (['P2P_EXPRESS', 'BAITY_HILL'] as const).forEach((routeId) => {
-      fetch(`${base}/api/mapbox/route?routeId=${routeId}`)
+      fetch(`${API}/api/mapbox/route?routeId=${routeId}`)
         .then((res) => (res.ok ? res.json() : Promise.reject(new Error(res.statusText))))
         .then((data: { geometry?: { type: string; coordinates: [number, number][] }; routeId: string }) => {
           if (!data.geometry || !data.geometry.coordinates.length) return;

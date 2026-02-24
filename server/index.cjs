@@ -227,15 +227,23 @@ async function handleComplaintsSummary(req, body, res) {
 }
 
 const server = http.createServer((req, res) => {
-  const allowedOrigins = [
-    'https://p2pnow.netlify.app',
-    'http://localhost:3001', // for local dev
-  ];
-  
   const origin = req.headers.origin;
-  
-  if (allowedOrigins.includes(origin)) {
+
+  const isLocal = origin === 'http://localhost:3000';
+  const isProd = origin === 'https://p2pnow.netlify.app';
+  const isPreview = typeof origin === 'string' && /^https:\/\/.*--p2pnow\.netlify\.app$/.test(origin);
+
+  if (isLocal || isProd || isPreview) {
     res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204);
+    res.end();
+    return;
   }
   
   if (req.url === "/healthz" && req.method === "GET") {
@@ -244,13 +252,12 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  if (req.method === 'OPTIONS') {
-    res.writeHead(204);
-    res.end();
+  if (req.url === "/" && req.method === "GET") {
+    res.writeHead(200, { "Content-Type": "text/plain" });
+    res.end("P2P Live API is running. Try /healthz");
     return;
   }
+
   if (req.url === '/api/ops/complaints/summary' && req.method === 'POST') {
     let body = '';
     req.on('data', (chunk) => { body += chunk; });

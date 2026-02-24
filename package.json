@@ -10,6 +10,7 @@
     "server": "node server/index.cjs"
   },
   "dependencies": {
+    "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "lucide-react": "0.294.0",
     "mapbox-gl": "3.18.1",

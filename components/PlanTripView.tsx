@@ -8,6 +8,7 @@ import { getRecentSearches, addRecentSearch, clearRecentSearches, type RecentSea
 import { computeMultimodalRoute } from '../utils/multimodalRouting';
 import { formatDuration, formatDistanceImperial, formatETA } from '../utils/format';
 import { ROUTE_CONFIGS } from '../data/routeConfig';
+import { API } from '../utils/api';
 
 const TOP_DESTINATIONS: Destination[] = TOP_LOCATIONS.map(topLocationToDestination);
 
@@ -70,12 +71,12 @@ export const PlanTripView: React.FC<PlanTripViewProps> = ({
       setGeocodeLoading(false);
       return;
     }
-    const base = (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_OPS_API_URL) || '';
+    // const base = (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_OPS_API_URL) || '';
     const controller = new AbortController();
     setGeocodeLoading(true);
     const t = setTimeout(() => {
       fetch(
-        `${base}/api/mapbox/geocode?q=${encodeURIComponent(q)}&proximity=${userLocation.lon},${userLocation.lat}`,
+        `${API}/api/mapbox/geocode?q=${encodeURIComponent(q)}&proximity=${userLocation.lon},${userLocation.lat}`,
         { signal: controller.signal }
       )
         .then((res) => (res.ok ? res.json() : Promise.reject(new Error(res.statusText))))
