@@ -279,46 +279,33 @@ export const PlanTripView: React.FC<PlanTripViewProps> = ({
     const leaveAt =
       hasBusArrivalEstimate ? new Date(now.getTime() + (waitAtStopSec - bufferSec) * 1000) : null;
     const shouldLeaveNow = leaveAt != null && leaveAt.getTime() <= now.getTime();
+    const nextBusInMin =
+      nextBusAt != null ? Math.max(0, Math.round((nextBusAt.getTime() - now.getTime()) / 60000)) : null;
     return (
       <div className="flex flex-col h-full bg-gray-50 overflow-hidden">
         {/* Journey Summary Header */}
         <div className="bg-white p-5 border-b border-gray-100 shadow-sm shrink-0">
-            <h2 className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Total Time</h2>
-            <div className="flex items-baseline gap-2 mb-1">
-              <span className="text-3xl font-black text-gray-900">
-                {formatDuration(totalDurationSeconds)}
-              </span>
-            </div>
-            <div className="text-sm text-gray-600 mb-1">
-              <span className="font-semibold">ETA:</span>{' '}
-              <span>{formatETA(totalDurationSeconds)}</span>
-            </div>
-            {journey.segments.some((s) => s.type === 'bus') ? (
-              <div className="text-xs text-p2p-blue font-semibold mb-2">
-                Via {journey.segments.find((s) => s.type === 'bus')?.routeName ?? 'bus'}
+          <div className="flex flex-row flex-wrap items-start justify-between gap-4">
+            {/* Left: Total time + summary */}
+            <div className="flex-1 min-w-0">
+              <h2 className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Total Time</h2>
+              <div className="flex items-baseline gap-2 mb-1">
+                <span className="text-3xl font-black text-gray-900">
+                  {formatDuration(totalDurationSeconds)}
+                </span>
               </div>
-            ) : (
-              <div className="text-xs text-gray-500 mb-2">Walk only (faster than bus)</div>
-            )}
-            {hasBus ? (
-              hasBusArrivalEstimate && nextBusAt && leaveAt ? (
-                <div className="text-xs text-gray-600 mb-3 space-y-1">
-                  <div>
-                    <span className="font-semibold text-gray-700">Leave at:</span>{' '}
-                    <span className="font-semibold text-gray-900">
-                      {shouldLeaveNow ? 'Leave now' : leaveAt.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}
-                    </span>
-                  </div>
-                  <div className="text-gray-500">
-                    To catch: <span className="font-semibold text-gray-700">{busSeg?.routeName ?? 'bus'}</span>{' '}
-                    (next bus at {nextBusAt.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })})
-                  </div>
+              <div className="text-sm text-gray-600 mb-1">
+                <span className="font-semibold">ETA:</span>{' '}
+                <span>{formatETA(totalDurationSeconds)}</span>
+              </div>
+              {journey.segments.some((s) => s.type === 'bus') ? (
+                <div className="text-xs text-p2p-blue font-semibold mb-2">
+                  Via {journey.segments.find((s) => s.type === 'bus')?.routeName ?? 'bus'}
                 </div>
               ) : (
-                <div className="text-xs text-gray-500 mb-3">No upcoming arrivals — using walking-only estimate.</div>
-              )
-            ) : null}
-            <div className="text-xs text-gray-500 mb-4">
+                <div className="text-xs text-gray-500 mb-2">Walk only (faster than bus)</div>
+              )}
+              <div className="text-xs text-gray-500 mb-4">
               {journey.segments.length === 1 ? (
                 <>Walk: {formatDuration(journey.segments[0].durationMin * 60)}</>
               ) : (
@@ -330,8 +317,8 @@ export const PlanTripView: React.FC<PlanTripViewProps> = ({
                   Walk to Destination: {formatDuration((journey.segments[2]?.durationMin ?? 0) * 60)}
                 </>
               )}
-            </div>
-            <div className="flex flex-wrap gap-2 mb-4">
+              </div>
+              <div className="flex flex-wrap gap-2 mb-4">
                {journey.segments.map((seg, i) => (
                  <div key={i} className={`flex items-center text-xs font-bold px-2 py-1 rounded-md border ${
                    seg.type === 'walk' ? 'bg-gray-100 text-gray-600 border-gray-200' : 'bg-p2p-blue/10 text-p2p-blue border-p2p-blue/20'
@@ -340,7 +327,103 @@ export const PlanTripView: React.FC<PlanTripViewProps> = ({
                    {formatDuration(seg.durationMin * 60)}
                  </div>
                ))}
+              </div>
             </div>
+
+            {/* Right: Timing widget (mobile-first, compact) */}
+            <div className="ml-auto">
+              <div className="inline-flex flex-col max-w-[180px] md:max-w-[220px] rounded-xl border border-amber-200 bg-amber-50 px-2.5 py-2 md:px-3 md:py-2.5 shadow-sm text-[11px] md:text-xs text-gray-900">
+                <div className="text-[9px] md:text-[10px] font-semibold uppercase tracking-wide text-amber-700 mb-1">
+                  Timing
+                </div>
+                {hasBus && hasBusArrivalEstimate && nextBusAt && leaveAt ? (
+                  <>
+                    {/* Mobile compact (<= sm) */}
+                    <div className="block sm:hidden space-y-0.5">
+                      <div className="font-semibold text-gray-900">
+                        {shouldLeaveNow
+                          ? 'Leave now'
+                          : `Leave at ${leaveAt.toLocaleTimeString(undefined, {
+                              hour: 'numeric',
+                              minute: '2-digit',
+                            })}`}
+                      </div>
+                      <div
+                        className={`font-semibold text-[11px] ${
+                          busSeg?.routeName === 'P2P Express'
+                            ? 'text-p2p-blue'
+                            : busSeg?.routeName === 'Baity Hill'
+                            ? 'text-p2p-red'
+                            : 'text-gray-900'
+                        }`}
+                      >
+                        {busSeg?.routeName ?? 'bus'}
+                      </div>
+                      <div className="text-[10px] text-gray-700">
+                        {nextBusInMin != null
+                          ? `Next bus: ${nextBusInMin} min`
+                          : `Next bus: ${nextBusAt.toLocaleTimeString(undefined, {
+                              hour: 'numeric',
+                              minute: '2-digit',
+                            })}`}
+                      </div>
+                    </div>
+
+                    {/* Desktop/tablet full version */}
+                    <div className="hidden sm:block space-y-1">
+                      <div className="flex items-baseline justify-between gap-2">
+                        <span className="font-semibold">Leave at:</span>
+                        <span className="font-semibold text-gray-900 whitespace-nowrap">
+                          {shouldLeaveNow
+                            ? 'Leave now'
+                            : leaveAt.toLocaleTimeString(undefined, {
+                                hour: 'numeric',
+                                minute: '2-digit',
+                              })}
+                        </span>
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <div className="flex items-baseline justify-between gap-2">
+                          <span className="font-semibold">To catch:</span>
+                          <span
+                            className={`font-semibold whitespace-nowrap ${
+                              busSeg?.routeName === 'P2P Express'
+                                ? 'text-p2p-blue'
+                                : busSeg?.routeName === 'Baity Hill'
+                                ? 'text-p2p-red'
+                                : 'text-gray-900'
+                            }`}
+                          >
+                            {busSeg?.routeName ?? 'bus'}
+                          </span>
+                        </div>
+                        <span className="text-[10px] md:text-[11px] text-gray-700">
+                          Next bus at{' '}
+                          <span className="font-semibold text-gray-900">
+                            {nextBusAt.toLocaleTimeString(undefined, {
+                              hour: 'numeric',
+                              minute: '2-digit',
+                            })}
+                          </span>
+                        </span>
+                      </div>
+                    </div>
+                  </>
+                ) : hasBus ? (
+                  <div className="text-[11px] md:text-xs text-gray-800">
+                    No upcoming arrivals — using walking-only estimate.
+                  </div>
+                ) : (
+                  <div className="text-[11px] md:text-xs text-gray-800">
+                    <span className="font-semibold">Walking only</span>
+                    <div className="text-[10px] text-gray-600">
+                      No bus timing needed for this trip.
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
 
             <div className="flex gap-3">
               <button 

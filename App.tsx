@@ -71,13 +71,16 @@ function App() {
   }, []);
 
   return (
-    <div className="h-full w-full flex flex-col bg-gray-50 overflow-hidden relative">
+    <div className="min-h-[100dvh] h-full w-full flex flex-col bg-gray-50 overflow-hidden relative">
       <AppHeader loadingLoc={loadingLoc} />
 
       {/* Main Content Area */}
       <main className="flex-1 relative overflow-hidden">
         {view === 'list' && (
-          <div className="h-full overflow-y-auto no-scrollbar pb-20">
+          <div
+            className="h-full overflow-y-auto no-scrollbar pb-20"
+            style={{ WebkitOverflowScrolling: 'touch' }}
+          >
             {/* Closest Stop section: same horizontal padding as Active Buses */}
             {closestStop && (
               <div className="px-4 pt-4 pb-2">
@@ -119,12 +122,17 @@ function App() {
         )}
 
         {view === 'plan' && (
-          <PlanTripView 
-            userLocation={userLocation}
-            onPlanRoute={handlePlanRoute}
-            onViewOnMap={handleViewOnMap}
-            existingJourney={activeJourney}
-          />
+          <div
+            className="h-full overflow-y-auto no-scrollbar pb-20"
+            style={{ WebkitOverflowScrolling: 'touch' }}
+          >
+            <PlanTripView 
+              userLocation={userLocation}
+              onPlanRoute={handlePlanRoute}
+              onViewOnMap={handleViewOnMap}
+              existingJourney={activeJourney}
+            />
+          </div>
         )}
         
         {view === 'map' && (

@@ -292,10 +292,9 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
             'interpolate',
             ['linear'],
             ['zoom'],
-            10, 6,
-            13, 8,
-            16, 10,
-            19, 13,
+            12, 4,
+            16, 6,
+            18, 7,
           ]);
         }
         if (map.getLayer(JOURNEY_LAYER)) {
@@ -305,10 +304,9 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
             'interpolate',
             ['linear'],
             ['zoom'],
-            10, 4,
-            13, 6,
-            16, 8,
-            19, 11,
+            12, 4,
+            16, 6,
+            18, 7,
           ]);
         }
         // Ensure casing is below black, and black is above everything else.
@@ -327,7 +325,7 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
 
     map.on('load', () => {
       try {
-        map.addSource('mapbox-dem', {
+      map.addSource('mapbox-dem', {
           type: 'raster-dem',
           url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
           tileSize: 512,
@@ -345,7 +343,18 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
         type: 'line',
         source: P2P_EXPRESS_LINE_SOURCE,
         layout: { 'line-join': 'round', 'line-cap': 'round' },
-        paint: { 'line-color': ROUTE_COLORS.P2P_EXPRESS, 'line-width': 4, 'line-opacity': 0.9 },
+        paint: {
+          'line-color': ROUTE_COLORS.P2P_EXPRESS,
+          'line-width': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            12, 3,
+            16, 4,
+            18, 5,
+          ],
+          'line-opacity': 0.9,
+        },
       });
       map.addLayer({
         id: BAITY_HILL_LINE_LAYER,
@@ -354,10 +363,15 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
         layout: { 'line-join': 'round', 'line-cap': 'round' },
         paint: {
           'line-color': ROUTE_COLORS.BAITY_HILL,
-          'line-width': 4,
+          'line-width': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            12, 3,
+            16, 4,
+            18, 5,
+          ],
           'line-opacity': 0.9,
-          // Screen-space offset so overlapping routes stay visually separated
-          'line-translate': [8, 0],
         },
       });
 
@@ -709,6 +723,7 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
   useEffect(() => {
     if (!mapReady || !mapRef.current) return;
     const map = mapRef.current;
+
     (['P2P_EXPRESS', 'BAITY_HILL'] as const).forEach((routeId) => {
       fetch(`${API}/api/mapbox/route?routeId=${routeId}`)
         .then((res) => (res.ok ? res.json() : Promise.reject(new Error(res.statusText))))
@@ -727,11 +742,13 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
           if (src) {
             src.setData({
               type: 'FeatureCollection',
-              features: [{
-                type: 'Feature',
-                geometry: { type: 'LineString' as const, coordinates: data.geometry!.coordinates },
-                properties: {},
-              }],
+              features: [
+                {
+                  type: 'Feature',
+                  geometry: { type: 'LineString' as const, coordinates: data.geometry!.coordinates },
+                  properties: {},
+                },
+              ],
             });
           }
         })
