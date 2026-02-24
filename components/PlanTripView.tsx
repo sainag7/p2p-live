@@ -71,7 +71,6 @@ export const PlanTripView: React.FC<PlanTripViewProps> = ({
       setGeocodeLoading(false);
       return;
     }
-    // const base = (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_OPS_API_URL) || '';
     const controller = new AbortController();
     setGeocodeLoading(true);
     const t = setTimeout(() => {

@@ -607,7 +607,6 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
   useEffect(() => {
     if (!mapReady || !mapRef.current) return;
     const map = mapRef.current;
-    //const base = (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_OPS_API_URL) || '';
     (['P2P_EXPRESS', 'BAITY_HILL'] as const).forEach((routeId) => {
       fetch(`${API}/api/mapbox/route?routeId=${routeId}`)
         .then((res) => (res.ok ? res.json() : Promise.reject(new Error(res.statusText))))
