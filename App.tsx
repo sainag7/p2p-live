@@ -78,9 +78,9 @@ function App() {
       <main className="flex-1 relative overflow-hidden">
         {view === 'list' && (
           <div className="h-full overflow-y-auto no-scrollbar pb-20">
-            {/* Closest Stop section: header tight to card */}
+            {/* Closest Stop section: same horizontal padding as Active Buses */}
             {closestStop && (
-              <div className="px-4 pt-4">
+              <div className="px-4 pt-4 pb-2">
                 <h2 className="text-gray-900 font-bold text-lg mb-1">Closest Stop to You</h2>
                 <ClosestStopCard 
                   stop={closestStop} 
@@ -89,7 +89,7 @@ function App() {
                 />
               </div>
             )}
-            {/* Active Buses section: more space above header, then list */}
+            {/* Active Buses section: aligned padding */}
             <div className="px-4 pt-6 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <h2 className="text-gray-900 font-bold text-lg">Active Buses</h2>

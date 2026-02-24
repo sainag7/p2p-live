@@ -417,7 +417,7 @@ export const PlanTripView: React.FC<PlanTripViewProps> = ({
 
   // Render Search View
   const dropdownContent = (
-    <div ref={dropdownScrollRef} className="max-h-[60vh] overflow-y-auto p-2" style={{ WebkitOverflowScrolling: 'touch' }}>
+    <div ref={dropdownScrollRef} className="max-h-[60vh] overflow-y-auto pt-4 pb-2 px-2" style={{ WebkitOverflowScrolling: 'touch' }}>
       {showDropdownUnfocused && (
         <>
           <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-2">Top Destinations</h3>

@@ -1,0 +1,54 @@
+Implement the following UI layout + alignment fixes across Plan Trip + List/Buses page + bottom nav.
+
+1) PLAN TRIP – ADD SPACE BETWEEN SEARCH BAR AND TOP DESTINATIONS
+- On the Plan Trip page, add vertical spacing between:
+  - The search input container
+  - The “Top Destinations” section header/list
+- Use consistent spacing from design system (e.g., 12px–20px margin-top).
+- Do NOT add padding inside the search input itself — spacing should be external.
+- Ensure spacing behaves correctly:
+  - When dropdown is open
+  - When dropdown is closed
+  - On mobile and desktop
+
+2) LIST PAGE – FIX PADDING FOR “CLOSEST STOP TO YOU”
+- Adjust padding so the “Closest Stop to You” header:
+  - Aligns horizontally with other section headers
+  - Has consistent left/right padding with cards and content below
+- Ensure:
+  - No extra left indent compared to Active Buses
+  - Vertical spacing above and below matches other sections
+- Remove any accidental double padding (e.g., nested containers adding padding twice).
+
+3) BOTTOM NAV – CHANGE “List” TO “Buses”
+- Replace bottom nav label:
+  - “List” → “Buses”
+- Update any routing references if needed (route name can remain /list internally if desired).
+
+4) BOTTOM NAV TEXT ALIGNMENT FIX (IMPORTANT)
+Currently “Plan Trip” appears slightly lower than others (likely due to:
+- Larger icon when active
+- Icon scaling on highlight
+- Different line-height)
+
+Fix requirements:
+- All bottom nav items must:
+  - Have equal height containers
+  - Use flex column layout: icon on top, label below
+  - Vertically center contents
+- Active state must NOT increase icon size in a way that shifts layout.
+  - If scaling icon on active, use transform: scale() without affecting layout (no margin/padding shift).
+  - Ensure consistent icon box height across states.
+- Text labels (“Map”, “Buses”, “Plan Trip”) must:
+  - Have same font-size
+  - Same line-height
+  - Same baseline alignment
+- Verify:
+  - All three labels are perfectly aligned horizontally.
+  - Highlighted state does not change vertical position.
+
+5) FINAL CHECKS
+- Bottom nav should feel clean and modern.
+- No jitter when switching tabs.
+- Plan Trip no longer sits lower than the other two.
+- Spacing between search bar and Top Destinations looks intentional and balanced.

@@ -31,7 +31,7 @@ export const ClosestStopCard: React.FC<ClosestStopCardProps> = ({ stop, userLoca
   }, [stop, vehicles]);
 
   return (
-    <div className="mx-4 mt-4 bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+    <div className="mt-3 bg-white rounded-xl shadow-sm border border-gray-100 p-4">
       <div className="flex items-start justify-between mb-3">
         <div>
           <h2 className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-1">Closest Stop</h2>
