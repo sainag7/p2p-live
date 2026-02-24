@@ -139,7 +139,7 @@ function App() {
                 setSelectedStop(null);
               }}
               onSelectStop={(stop) => {
-                setSelectedStop(stop);
+                setSelectedStop((prev) => (prev?.id === stop.id ? null : stop));
               }}
               selectedStop={selectedStop}
               activeJourney={activeJourney}

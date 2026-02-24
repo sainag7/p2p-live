@@ -67,27 +67,34 @@ export const MapView: React.FC<MapViewProps> = ({
         </button>
       </div>
 
-      {activeJourney && (
-        <div className="absolute top-4 left-4 right-4 z-[400] animate-in slide-in-from-top-4">
-          <div className="bg-white p-4 rounded-xl shadow-lg border border-gray-100 flex items-center justify-between">
-            <div>
-              <div className="text-xs font-bold text-gray-500 uppercase">Navigating to</div>
-              <div className="font-bold text-gray-900">{activeJourney.destination.name}</div>
-              <div className="text-xs text-p2p-blue font-semibold mt-1">
-                {activeJourney.totalDurationMin} min • {activeJourney.segments.length} steps
+      {activeJourney && (() => {
+        const busSegment = activeJourney.segments.find((s) => s.type === 'bus');
+        const routeLabel = busSegment
+          ? `Navigating via ${busSegment.routeName ?? 'bus'}`
+          : 'Navigating: Walk only (faster than bus)';
+        return (
+          <div className="absolute bottom-24 left-4 right-4 z-[400] animate-in slide-in-from-bottom-4 flex justify-center pointer-events-none">
+            <div className="pointer-events-auto bg-white p-4 rounded-xl shadow-lg border border-gray-100 flex items-center justify-between gap-3 max-w-md w-full">
+              <div className="min-w-0">
+                <div className="text-xs font-bold text-gray-500 uppercase">Navigating to</div>
+                <div className="font-bold text-gray-900 truncate">{activeJourney.destination.name}</div>
+                <div className="text-xs text-p2p-blue font-semibold mt-0.5">{routeLabel}</div>
+                <div className="text-xs text-gray-500 mt-0.5">
+                  {activeJourney.totalDurationMin} min • {activeJourney.segments.length} steps
+                </div>
               </div>
+              <button
+                type="button"
+                onClick={onClearJourney}
+                className="p-2 bg-gray-100 rounded-full text-gray-600 hover:bg-gray-200 shrink-0"
+                aria-label="Clear journey"
+              >
+                <X size={20} />
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={onClearJourney}
-              className="p-2 bg-gray-100 rounded-full text-gray-600 hover:bg-gray-200"
-              aria-label="Clear journey"
-            >
-              <X size={20} />
-            </button>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {selectedStop && !activeJourney && (
         <div className="absolute top-20 left-4 right-4 bg-white p-4 rounded-xl shadow-lg border border-gray-100 z-[400] animate-in fade-in slide-in-from-top-4 duration-300">

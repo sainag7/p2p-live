@@ -45,7 +45,9 @@ export const PlanTripView: React.FC<PlanTripViewProps> = ({
   const [routingLoading, setRoutingLoading] = useState(false);
   const [addressResults, setAddressResults] = useState<GeocodeResult[]>([]);
   const [geocodeLoading, setGeocodeLoading] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
   const blurTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dropdownScrollRef = useRef<HTMLDivElement>(null);
 
   const stopNameById = useMemo(() => {
     const m = new Map<string, string>();
@@ -94,7 +96,9 @@ export const PlanTripView: React.FC<PlanTripViewProps> = ({
     };
   }, [query, userLocation.lon, userLocation.lat]);
 
-  const showPopularAndRecent = searchFocused && query.trim().length === 0;
+  const showDropdownUnfocused = !searchFocused;
+  const showDropdownFocusedEmpty = searchFocused && query.trim().length === 0;
+  const showDropdownFocusedQuery = searchFocused && query.trim().length > 0;
 
   const refreshRecent = useCallback(() => {
     setRecentSearches(getRecentSearches());
@@ -104,7 +108,7 @@ export const PlanTripView: React.FC<PlanTripViewProps> = ({
     async (dest: Destination) => {
       setQuery(dest.name);
       setSearchFocused(false);
-      addRecentSearch({ label: dest.name, lat: dest.lat, lon: dest.lon });
+      addRecentSearch({ label: dest.name, address: dest.address, lat: dest.lat, lon: dest.lon });
       refreshRecent();
       setRoutingLoading(true);
       try {
@@ -152,7 +156,7 @@ export const PlanTripView: React.FC<PlanTripViewProps> = ({
             };
       setQuery(dest.name);
       setSearchFocused(false);
-      addRecentSearch({ label: dest.name, lat: dest.lat, lon: dest.lon });
+      addRecentSearch({ label: dest.name, address: item.address, lat: dest.lat, lon: dest.lon });
       refreshRecent();
       setRoutingLoading(true);
       try {
@@ -176,6 +180,72 @@ export const PlanTripView: React.FC<PlanTripViewProps> = ({
     clearRecentSearches();
     setRecentSearches([]);
   }, []);
+
+  type SelectableEntry =
+    | { type: 'top'; dest: Destination }
+    | { type: 'recent'; item: RecentSearchItem }
+    | { type: 'address'; item: GeocodeResult };
+  const selectableItems = useMemo((): SelectableEntry[] => {
+    if (showDropdownUnfocused) return TOP_DESTINATIONS.map((dest) => ({ type: 'top', dest }));
+    if (showDropdownFocusedEmpty)
+      return [
+        ...recentSearches.map((item) => ({ type: 'recent' as const, item })),
+        ...TOP_DESTINATIONS.map((dest) => ({ type: 'top' as const, dest })),
+      ];
+    if (showDropdownFocusedQuery)
+      return [
+        ...topLocationSuggestions.map((dest) => ({ type: 'top' as const, dest })),
+        ...addressResults.map((item) => ({ type: 'address' as const, item })),
+      ];
+    return [];
+  }, [
+    showDropdownUnfocused,
+    showDropdownFocusedEmpty,
+    showDropdownFocusedQuery,
+    recentSearches,
+    topLocationSuggestions,
+    addressResults,
+  ]);
+
+  useEffect(() => {
+    setHighlightedIndex((prev) => (prev >= selectableItems.length ? 0 : Math.min(prev, selectableItems.length - 1)));
+  }, [selectableItems.length]);
+
+  useEffect(() => {
+    if (selectableItems.length === 0) return;
+    const el = dropdownScrollRef.current?.querySelector(`[data-dropdown-index="${highlightedIndex}"]`);
+    (el as HTMLElement)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }, [highlightedIndex, selectableItems.length]);
+
+  const handleSearchKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        (e.target as HTMLInputElement).blur();
+        setSearchFocused(false);
+        return;
+      }
+      if (selectableItems.length === 0) return;
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setHighlightedIndex((prev) => (prev + 1) % selectableItems.length);
+        return;
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setHighlightedIndex((prev) => (prev - 1 + selectableItems.length) % selectableItems.length);
+        return;
+      }
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const entry = selectableItems[highlightedIndex];
+        if (!entry) return;
+        if (entry.type === 'top') handleSelectDestination(entry.dest);
+        else if (entry.type === 'recent') handleSelectRecent(entry.item);
+        else if (entry.type === 'address') handleSelectAddressResult(entry.item);
+      }
+    },
+    [selectableItems, highlightedIndex, handleSelectDestination, handleSelectRecent, handleSelectAddressResult]
+  );
 
   const handleNewSearch = () => {
     setQuery('');
@@ -206,10 +276,17 @@ export const PlanTripView: React.FC<PlanTripViewProps> = ({
                 {formatDuration(totalDurationSeconds)}
               </span>
             </div>
-            <div className="text-sm text-gray-600 mb-2">
+            <div className="text-sm text-gray-600 mb-1">
               <span className="font-semibold">ETA:</span>{' '}
               <span>{formatETA(totalDurationSeconds)}</span>
             </div>
+            {journey.segments.some((s) => s.type === 'bus') ? (
+              <div className="text-xs text-p2p-blue font-semibold mb-2">
+                Via {journey.segments.find((s) => s.type === 'bus')?.routeName ?? 'bus'}
+              </div>
+            ) : (
+              <div className="text-xs text-gray-500 mb-2">Walk only (faster than bus)</div>
+            )}
             <div className="text-xs text-gray-500 mb-4">
               {journey.segments.length === 1 ? (
                 <>Walk: {formatDuration(journey.segments[0].durationMin * 60)}</>
@@ -339,164 +416,200 @@ export const PlanTripView: React.FC<PlanTripViewProps> = ({
   }
 
   // Render Search View
-  return (
-    <div className="flex flex-col h-full bg-gray-50 p-4">
-      <div className="mb-4 mt-2">
-        <h2 className="text-2xl font-black text-gray-900 mb-4">Plan Trip</h2>
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={20} aria-hidden />
-          <input 
-            id="plan-trip-destination"
-            type="text" 
-            autoComplete="off"
-            placeholder="Where do you want to go?"
-            aria-label="Destination search"
-            aria-describedby={query.trim() ? "top-locations-heading" : showPopularAndRecent ? "popular-heading" : undefined}
-            className="w-full bg-white pl-12 pr-4 py-4 rounded-xl shadow-sm border border-gray-200 text-lg font-medium focus:outline-none focus:ring-2 focus:ring-p2p-blue focus:border-transparent placeholder-gray-400"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onFocus={() => { if (blurTimerRef.current) clearTimeout(blurTimerRef.current); blurTimerRef.current = null; setSearchFocused(true); }}
-            onBlur={() => { blurTimerRef.current = setTimeout(() => setSearchFocused(false), 200); }}
-          />
-        </div>
-      </div>
-
-      <div className="flex-1 min-h-0 overflow-y-auto pb-20" style={{ WebkitOverflowScrolling: 'touch' }}>
-        {query.trim().length > 0 ? (
-          <div className="space-y-6">
-            <div>
-              <h3 id="top-locations-heading" className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 ml-1">
-                Top Locations
-              </h3>
-              {topLocationSuggestions.length > 0 ? (
-                <ul className="space-y-2 max-h-[40vh] overflow-y-auto" role="listbox" aria-label="Top locations" style={{ WebkitOverflowScrolling: 'touch' }}>
-                  {topLocationSuggestions.map((dest) => (
-                    <li key={dest.id} role="option">
-                      <button
-                        type="button"
-                        onClick={() => handleSelectDestination(dest)}
-                        className="w-full bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between group active:scale-[0.99] transition-transform text-left"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 rounded-full bg-gray-100 text-gray-500 group-hover:bg-p2p-blue/10 group-hover:text-p2p-blue transition-colors">
-                            <MapPin size={20} />
-                          </div>
-                          <div>
-                            <div className="font-bold text-gray-900">{dest.name}</div>
-                            {dest.address && <div className="text-sm text-gray-500">{dest.address}</div>}
-                          </div>
-                        </div>
-                        <ArrowRight size={20} className="text-gray-300" />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-sm text-gray-500 ml-1">No top locations match.</p>
+  const dropdownContent = (
+    <div ref={dropdownScrollRef} className="max-h-[60vh] overflow-y-auto p-2" style={{ WebkitOverflowScrolling: 'touch' }}>
+      {showDropdownUnfocused && (
+        <>
+          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-2">Top Destinations</h3>
+          <ul className="space-y-1" role="listbox" aria-label="Top destinations" aria-activedescendant={selectableItems.length ? `dropdown-option-${highlightedIndex}` : undefined}>
+            {TOP_DESTINATIONS.map((dest, i) => (
+              <li key={dest.id} role="option" aria-selected={highlightedIndex === i}>
+                <button
+                  type="button"
+                  id={`dropdown-option-${i}`}
+                  data-dropdown-index={i}
+                  onClick={() => handleSelectDestination(dest)}
+                  onMouseEnter={() => setHighlightedIndex(i)}
+                  className={`w-full px-3 py-2.5 rounded-lg text-left flex items-center gap-2 active:scale-[0.99] transition-transform ${highlightedIndex === i ? 'bg-p2p-blue/10' : 'hover:bg-gray-50'}`}
+                >
+                  <MapPin size={18} className="text-gray-400 shrink-0" />
+                  <div className="min-w-0">
+                    <div className="font-medium text-gray-900 truncate">{dest.name}</div>
+                    {dest.address && <div className="text-xs text-gray-500 truncate">{dest.address}</div>}
+                  </div>
+                  <ArrowRight size={16} className="text-gray-300 shrink-0 ml-auto" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+      {showDropdownFocusedEmpty && (
+        <div className="space-y-4">
+          <section aria-labelledby="recent-heading">
+            <div className="flex items-center justify-between mb-1 px-2">
+              <h3 id="recent-heading" className="text-xs font-bold text-gray-400 uppercase tracking-wider">Recent Searches</h3>
+              {recentSearches.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleClearRecent}
+                  className="text-xs font-semibold text-p2p-blue hover:underline flex items-center gap-1"
+                >
+                  <X size={14} /> Clear
+                </button>
               )}
             </div>
-            <div>
-              <div className="flex items-center justify-between mb-1 ml-1">
-                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Address Results</h3>
-                {geocodeLoading && <span className="text-[11px] text-gray-400">Searching…</span>}
-              </div>
-              {addressResults.length > 0 ? (
-                <ul className="space-y-2 max-h-[40vh] overflow-y-auto" role="listbox" aria-label="Address results" style={{ WebkitOverflowScrolling: 'touch' }}>
-                  {addressResults.map((item) => (
-                    <li key={item.id} role="option">
-                      <button
-                        type="button"
-                        onClick={() => handleSelectAddressResult(item)}
-                        className="w-full bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between group active:scale-[0.99] transition-transform text-left"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 rounded-full bg-gray-100 text-gray-500 group-hover:bg-p2p-blue/10 group-hover:text-p2p-blue transition-colors">
-                            <MapPin size={20} />
-                          </div>
-                          <div>
-                            <div className="font-bold text-gray-900">{item.place_name.split(',')[0]}</div>
-                            <div className="text-sm text-gray-500">{item.place_name}</div>
-                          </div>
-                        </div>
-                        <ArrowRight size={20} className="text-gray-300" />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              ) : !geocodeLoading && query.trim().length >= 3 && (
-                <p className="text-sm text-gray-500 ml-1">No address results.</p>
-              )}
-            </div>
-          </div>
-        ) : showPopularAndRecent ? (
-          <div className="space-y-6">
-            {recentSearches.length > 0 && (
-              <section aria-labelledby="recent-heading">
-                <div className="flex items-center justify-between mb-2 ml-1">
-                  <h3 id="recent-heading" className="text-xs font-bold text-gray-400 uppercase tracking-wider">Recent</h3>
-                  <button
-                    type="button"
-                    onClick={handleClearRecent}
-                    className="text-xs font-semibold text-p2p-blue hover:underline flex items-center gap-1"
-                  >
-                    <X size={14} /> Clear
-                  </button>
-                </div>
-                <ul className="space-y-2" role="listbox" aria-label="Recent searches">
-                  {recentSearches.map((item, i) => (
-                    <li key={`${item.label}-${item.timestamp}`} role="option">
-                      <button
-                        type="button"
-                        onClick={() => handleSelectRecent(item)}
-                        className="w-full bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 text-left active:scale-[0.99] transition-transform"
-                      >
-                        <div className="p-2 rounded-full bg-gray-100 text-gray-500">
-                          <History size={20} />
-                        </div>
-                        <span className="font-bold text-gray-900">{item.label}</span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )}
-            <section aria-labelledby="popular-heading">
-              <h3 id="popular-heading" className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 ml-1">Top Locations</h3>
-              <ul className="space-y-2 max-h-[50vh] overflow-y-auto" role="listbox" aria-label="Top locations" style={{ WebkitOverflowScrolling: 'touch' }}>
-                {TOP_DESTINATIONS.map((dest) => (
-                  <li key={dest.id} role="option">
-                    <button 
+            {recentSearches.length > 0 ? (
+              <ul className="space-y-1" role="listbox" aria-label="Recent searches" aria-activedescendant={selectableItems.length ? `dropdown-option-${highlightedIndex}` : undefined}>
+                {recentSearches.map((item, i) => (
+                  <li key={`${item.label}-${item.timestamp}`} role="option" aria-selected={highlightedIndex === i}>
+                    <button
                       type="button"
-                      onClick={() => handleSelectDestination(dest)}
-                      className="w-full bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between group active:scale-[0.99] transition-transform text-left"
+                      id={`dropdown-option-${i}`}
+                      data-dropdown-index={i}
+                      onClick={() => handleSelectRecent(item)}
+                      onMouseEnter={() => setHighlightedIndex(i)}
+                      className={`w-full px-3 py-2.5 rounded-lg flex items-center gap-3 text-left active:scale-[0.99] transition-transform ${highlightedIndex === i ? 'bg-p2p-blue/10' : 'hover:bg-gray-50'}`}
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-full bg-gray-100 text-gray-500 group-hover:bg-p2p-blue/10 group-hover:text-p2p-blue transition-colors">
-                          <MapPin size={20} />
-                        </div>
-                        <div>
-                          <div className="font-bold text-gray-900">{dest.name}</div>
-                          {dest.address && <div className="text-sm text-gray-500">{dest.address}</div>}
-                        </div>
+                      <History size={18} className="text-gray-400 shrink-0" />
+                      <div className="min-w-0">
+                        <div className="font-medium text-gray-900 truncate">{item.label}</div>
+                        {item.address && <div className="text-xs text-gray-500 truncate">{item.address}</div>}
                       </div>
-                      <ArrowRight size={20} className="text-gray-300" />
+                      <ArrowRight size={16} className="text-gray-300 shrink-0 ml-auto" />
                     </button>
                   </li>
                 ))}
               </ul>
-            </section>
+            ) : (
+              <p className="text-sm text-gray-400 px-2 py-1">No recent searches</p>
+            )}
+          </section>
+          <section aria-labelledby="top-locations-heading">
+            <h3 id="top-locations-heading" className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-2">Top Locations</h3>
+            <ul className="space-y-1" role="listbox" aria-label="Top locations" aria-activedescendant={selectableItems.length ? `dropdown-option-${highlightedIndex}` : undefined}>
+              {TOP_DESTINATIONS.map((dest, i) => {
+                const idx = recentSearches.length + i;
+                return (
+                  <li key={dest.id} role="option" aria-selected={highlightedIndex === idx}>
+                    <button
+                      type="button"
+                      id={`dropdown-option-${idx}`}
+                      data-dropdown-index={idx}
+                      onClick={() => handleSelectDestination(dest)}
+                      onMouseEnter={() => setHighlightedIndex(idx)}
+                      className={`w-full px-3 py-2.5 rounded-lg text-left flex items-center gap-2 active:scale-[0.99] transition-transform ${highlightedIndex === idx ? 'bg-p2p-blue/10' : 'hover:bg-gray-50'}`}
+                    >
+                      <MapPin size={18} className="text-gray-400 shrink-0" />
+                      <div className="min-w-0">
+                        <div className="font-medium text-gray-900 truncate">{dest.name}</div>
+                        {dest.address && <div className="text-xs text-gray-500 truncate">{dest.address}</div>}
+                      </div>
+                      <ArrowRight size={16} className="text-gray-300 shrink-0 ml-auto" />
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        </div>
+      )}
+      {showDropdownFocusedQuery && (
+        <div className="space-y-4">
+          <div>
+            <h3 id="top-locations-heading" className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-2">Top Locations</h3>
+            {topLocationSuggestions.length > 0 ? (
+              <ul className="space-y-1" role="listbox" aria-label="Top locations" aria-activedescendant={selectableItems.length ? `dropdown-option-${highlightedIndex}` : undefined}>
+                {topLocationSuggestions.map((dest, i) => (
+                  <li key={dest.id} role="option" aria-selected={highlightedIndex === i}>
+                    <button
+                      type="button"
+                      id={`dropdown-option-${i}`}
+                      data-dropdown-index={i}
+                      onClick={() => handleSelectDestination(dest)}
+                      onMouseEnter={() => setHighlightedIndex(i)}
+                      className={`w-full px-3 py-2.5 rounded-lg text-left flex items-center gap-2 active:scale-[0.99] transition-transform ${highlightedIndex === i ? 'bg-p2p-blue/10' : 'hover:bg-gray-50'}`}
+                    >
+                      <MapPin size={18} className="text-gray-400 shrink-0" />
+                      <div className="min-w-0">
+                        <div className="font-medium text-gray-900 truncate">{dest.name}</div>
+                        {dest.address && <div className="text-xs text-gray-500 truncate">{dest.address}</div>}
+                      </div>
+                      <ArrowRight size={16} className="text-gray-300 shrink-0 ml-auto" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-gray-500 px-2">No top locations match.</p>
+            )}
           </div>
-        ) : query.trim().length === 0 ? (
-           <div className="text-center py-10 opacity-60">
-             <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
-               <Navigation size={32} />
-             </div>
-             <p className="text-gray-500 font-medium">Search for a UNC building<br/>or landmark to start.</p>
-           </div>
-        ) : (
-          <div className="text-center py-10 text-gray-500">No locations found.</div>
-        )}
+          <div>
+            <div className="flex items-center justify-between mb-1 px-2">
+              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Address Results</h3>
+              {geocodeLoading && <span className="text-[11px] text-gray-400">Searching…</span>}
+            </div>
+            {addressResults.length > 0 ? (
+              <ul className="space-y-1" role="listbox" aria-label="Address results" aria-activedescendant={selectableItems.length ? `dropdown-option-${highlightedIndex}` : undefined}>
+                {addressResults.map((item, i) => {
+                  const idx = topLocationSuggestions.length + i;
+                  return (
+                  <li key={item.id} role="option" aria-selected={highlightedIndex === idx}>
+                    <button
+                      type="button"
+                      id={`dropdown-option-${idx}`}
+                      data-dropdown-index={idx}
+                      onClick={() => handleSelectAddressResult(item)}
+                      onMouseEnter={() => setHighlightedIndex(idx)}
+                      className={`w-full px-3 py-2.5 rounded-lg text-left flex items-center gap-2 active:scale-[0.99] transition-transform ${highlightedIndex === idx ? 'bg-p2p-blue/10' : 'hover:bg-gray-50'}`}
+                    >
+                      <MapPin size={18} className="text-gray-400 shrink-0" />
+                      <div className="min-w-0">
+                        <div className="font-medium text-gray-900 truncate">{item.place_name.split(',')[0]}</div>
+                        <div className="text-xs text-gray-500 truncate">{item.place_name}</div>
+                      </div>
+                      <ArrowRight size={16} className="text-gray-300 shrink-0 ml-auto" />
+                    </button>
+                  </li>
+                  );
+                })}
+              </ul>
+            ) : !geocodeLoading && query.trim().length >= 3 && (
+              <p className="text-sm text-gray-500 px-2">No address results.</p>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="flex flex-col h-full bg-gray-50 p-4">
+      <div className="mb-2 mt-2">
+        <h2 className="text-2xl font-black text-gray-900 mb-4">Plan Trip</h2>
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10" size={20} aria-hidden />
+          <input
+            id="plan-trip-destination"
+            type="text"
+            autoComplete="off"
+            placeholder="Where do you want to go?"
+            aria-label="Destination search"
+            aria-expanded={searchFocused || showDropdownUnfocused}
+            aria-haspopup="listbox"
+            className="w-full bg-white pl-12 pr-4 py-4 rounded-t-xl rounded-b-none shadow-sm border border-gray-200 border-b-0 text-lg font-medium focus:outline-none focus:ring-2 focus:ring-p2p-blue focus:border-transparent placeholder-gray-400"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onFocus={() => { if (blurTimerRef.current) clearTimeout(blurTimerRef.current); blurTimerRef.current = null; setSearchFocused(true); }}
+            onBlur={() => { blurTimerRef.current = setTimeout(() => setSearchFocused(false), 200); }}
+            onKeyDown={handleSearchKeyDown}
+          />
+          <div className="absolute top-full left-0 right-0 z-50 bg-white rounded-b-xl shadow-lg border border-t-0 border-gray-200 overflow-hidden">
+            {dropdownContent}
+          </div>
+        </div>
       </div>
+      <div className="flex-1 min-h-0 pb-20" />
     </div>
   );
 };

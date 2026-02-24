@@ -866,10 +866,12 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
   return (
     <div className={`relative w-full h-full ${className}`}>
       <div ref={containerRef} className="absolute inset-0 w-full h-full" />
-      {isDev && mapReady && (
+      {mapReady && (
         <div
-          className="absolute top-2 left-2 z-10 flex flex-wrap items-center gap-3 bg-white/95 rounded-xl shadow-md border border-gray-200/80 p-3"
+          className="absolute top-2 left-2 z-[500] flex flex-wrap items-center gap-3 bg-white/95 rounded-xl shadow-md border border-gray-200/80 p-3"
           style={{ fontFamily: "'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif" }}
+          role="group"
+          aria-label="Route visibility"
         >
           <div className="flex items-center gap-2">
             <span className="text-base font-semibold tracking-tight text-[#418FC5]">Buses</span>

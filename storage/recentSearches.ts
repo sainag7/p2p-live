@@ -1,9 +1,11 @@
-const STORAGE_KEY = 'p2p_recent_searches_v1';
-const MAX_ITEMS = 6;
+const STORAGE_KEY = 'p2p_recent_searches_v2';
+const MAX_ITEMS = 8;
 const EXPIRE_DAYS = 14;
 
 export interface RecentSearchItem {
   label: string;
+  /** Full address string if available (e.g. from geocode). */
+  address?: string;
   timestamp: number;
   lat?: number;
   lon?: number;
@@ -26,7 +28,7 @@ function loadRaw(): RecentSearchItem[] {
   }
 }
 
-/** Returns recent searches, most recent first, deduped, expired removed, max 6. */
+/** Returns recent searches, most recent first, deduped, expired removed, max 8. */
 export function getRecentSearches(): RecentSearchItem[] {
   const cutoff = getExpiryCutoff();
   const items = loadRaw()
@@ -35,13 +37,21 @@ export function getRecentSearches(): RecentSearchItem[] {
   return items;
 }
 
-/** Add or move-to-top by label. Dedupes by label, keeps max 6, writes to localStorage. */
+/** Normalize key for dedupe: same destination by name (and optional address). */
+function dedupeKey(item: RecentSearchItem): string {
+  const name = (item.label || '').trim().toLowerCase();
+  const addr = (item.address || '').trim().toLowerCase();
+  return addr ? `${name}|${addr}` : name;
+}
+
+/** Add or move-to-top by label/address. Dedupes (same name/address moves to top), max 8, writes to localStorage. */
 export function addRecentSearch(item: Omit<RecentSearchItem, 'timestamp'>): void {
   const ts = Date.now();
   const next: RecentSearchItem = { ...item, timestamp: ts };
   const cutoff = getExpiryCutoff();
   const existing = loadRaw().filter((i) => i.timestamp >= cutoff);
-  const without = existing.filter((i) => i.label.trim().toLowerCase() !== next.label.trim().toLowerCase());
+  const nextKey = dedupeKey(next);
+  const without = existing.filter((i) => dedupeKey(i) !== nextKey);
   const merged = [next, ...without].slice(0, MAX_ITEMS);
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
