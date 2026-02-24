@@ -266,6 +266,19 @@ export const PlanTripView: React.FC<PlanTripViewProps> = ({
   // Render Result View
   if (journey) {
     const totalDurationSeconds = journey.totalDurationMin * 60;
+    const now = new Date();
+    const bufferSec = 90;
+    const firstWalk = journey.segments.find((s) => s.type === 'walk') ?? null;
+    const busSeg = journey.segments.find((s) => s.type === 'bus') ?? null;
+    const hasBus = !!busSeg;
+    const hasBusArrivalEstimate = hasBus && busSeg?.waitTimeMin != null && firstWalk != null;
+    const walkToStartStopSec = firstWalk ? firstWalk.durationMin * 60 : 0;
+    const waitAtStopSec = busSeg?.waitTimeMin != null ? busSeg.waitTimeMin * 60 : 0;
+    const nextBusAt =
+      hasBusArrivalEstimate ? new Date(now.getTime() + (walkToStartStopSec + waitAtStopSec) * 1000) : null;
+    const leaveAt =
+      hasBusArrivalEstimate ? new Date(now.getTime() + (waitAtStopSec - bufferSec) * 1000) : null;
+    const shouldLeaveNow = leaveAt != null && leaveAt.getTime() <= now.getTime();
     return (
       <div className="flex flex-col h-full bg-gray-50 overflow-hidden">
         {/* Journey Summary Header */}
@@ -287,6 +300,24 @@ export const PlanTripView: React.FC<PlanTripViewProps> = ({
             ) : (
               <div className="text-xs text-gray-500 mb-2">Walk only (faster than bus)</div>
             )}
+            {hasBus ? (
+              hasBusArrivalEstimate && nextBusAt && leaveAt ? (
+                <div className="text-xs text-gray-600 mb-3 space-y-1">
+                  <div>
+                    <span className="font-semibold text-gray-700">Leave at:</span>{' '}
+                    <span className="font-semibold text-gray-900">
+                      {shouldLeaveNow ? 'Leave now' : leaveAt.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}
+                    </span>
+                  </div>
+                  <div className="text-gray-500">
+                    To catch: <span className="font-semibold text-gray-700">{busSeg?.routeName ?? 'bus'}</span>{' '}
+                    (next bus at {nextBusAt.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })})
+                  </div>
+                </div>
+              ) : (
+                <div className="text-xs text-gray-500 mb-3">No upcoming arrivals — using walking-only estimate.</div>
+              )
+            ) : null}
             <div className="text-xs text-gray-500 mb-4">
               {journey.segments.length === 1 ? (
                 <>Walk: {formatDuration(journey.segments[0].durationMin * 60)}</>
@@ -333,8 +364,13 @@ export const PlanTripView: React.FC<PlanTripViewProps> = ({
            {journey.segments.map((seg, idx) => (
              <div key={idx} className="relative pl-8 group">
                 {/* Connector Line */}
-                {idx !== journey.segments.length - 1 && (
-                  <div className={`absolute left-[15px] top-8 bottom-[-24px] w-1 ${seg.type === 'bus' ? 'bg-p2p-blue' : 'border-l-2 border-dashed border-gray-300 ml-[3px]'}`} />
+                {(idx !== journey.segments.length - 1 ||
+                  (idx === journey.segments.length - 1 && seg.type === 'walk')) && (
+                  <div
+                    className={`absolute left-[15px] top-8 ${
+                      idx === journey.segments.length - 1 ? 'bottom-[-48px]' : 'bottom-[-24px]'
+                    } w-1 ${seg.type === 'bus' ? 'bg-p2p-blue' : 'border-l-2 border-dashed border-gray-300 ml-[3px]'}`}
+                  />
                 )}
 
                 {/* Icon Marker */}

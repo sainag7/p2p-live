@@ -282,6 +282,49 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
     });
     map.addControl(new mapboxgl.NavigationControl({ showCompass: true }), 'top-right');
 
+    const applyJourneyLayerStyles = () => {
+      // Regression-proof: force the navigation route to stay BLACK with full opacity.
+      try {
+        if (map.getLayer(JOURNEY_CASING_LAYER)) {
+          map.setPaintProperty(JOURNEY_CASING_LAYER, 'line-color', 'rgba(255,255,255,0.9)');
+          map.setPaintProperty(JOURNEY_CASING_LAYER, 'line-opacity', 0.9);
+          map.setPaintProperty(JOURNEY_CASING_LAYER, 'line-width', [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            10, 6,
+            13, 8,
+            16, 10,
+            19, 13,
+          ]);
+        }
+        if (map.getLayer(JOURNEY_LAYER)) {
+          map.setPaintProperty(JOURNEY_LAYER, 'line-color', '#000000');
+          map.setPaintProperty(JOURNEY_LAYER, 'line-opacity', 1);
+          map.setPaintProperty(JOURNEY_LAYER, 'line-width', [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            10, 4,
+            13, 6,
+            16, 8,
+            19, 11,
+          ]);
+        }
+        // Ensure casing is below black, and black is above everything else.
+        if (map.getLayer(JOURNEY_CASING_LAYER)) map.moveLayer(JOURNEY_CASING_LAYER);
+        if (map.getLayer(JOURNEY_LAYER)) map.moveLayer(JOURNEY_LAYER);
+        if (map.getLayer(JOURNEY_STOPS_LAYER)) map.moveLayer(JOURNEY_STOPS_LAYER);
+        if (map.getLayer(DESTINATION_LAYER)) map.moveLayer(DESTINATION_LAYER);
+      } catch {
+        /* ignore */
+      }
+    };
+
+    map.on('style.load', () => {
+      applyJourneyLayerStyles();
+    });
+
     map.on('load', () => {
       try {
         map.addSource('mapbox-dem', {
@@ -519,16 +562,16 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
         source: JOURNEY_SOURCE,
         layout: { 'line-join': 'round', 'line-cap': 'round' },
         paint: {
-          'line-color': '#ffffff',
+          'line-color': 'rgba(255,255,255,0.9)',
           'line-opacity': 0.9,
           'line-width': [
             'interpolate',
             ['linear'],
             ['zoom'],
-            10, 5,
-            13, 7,
-            16, 9,
-            19, 12,
+            10, 6,
+            13, 8,
+            16, 10,
+            19, 13,
           ],
         },
       });
@@ -538,16 +581,16 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
         source: JOURNEY_SOURCE,
         layout: { 'line-join': 'round', 'line-cap': 'round' },
         paint: {
-          'line-color': '#000',
-          'line-opacity': 0.95,
+          'line-color': '#000000',
+          'line-opacity': 1,
           'line-width': [
             'interpolate',
             ['linear'],
             ['zoom'],
-            10, 3,
-            13, 5,
-            16, 7,
-            19, 10,
+            10, 4,
+            13, 6,
+            16, 8,
+            19, 11,
           ],
           'line-dasharray': ['case', ['==', ['get', 'segmentType'], 'walk'], ['literal', [2, 2]], ['literal', []]],
         },
@@ -575,15 +618,7 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
         },
       });
 
-      // Ensure journey + casing always sit above colored routes and most symbols
-      try {
-        if (map.getLayer(JOURNEY_CASING_LAYER)) map.moveLayer(JOURNEY_CASING_LAYER);
-        if (map.getLayer(JOURNEY_LAYER)) map.moveLayer(JOURNEY_LAYER);
-        if (map.getLayer(JOURNEY_STOPS_LAYER)) map.moveLayer(JOURNEY_STOPS_LAYER);
-        if (map.getLayer(DESTINATION_LAYER)) map.moveLayer(DESTINATION_LAYER);
-      } catch {
-        /* ignore */
-      }
+      applyJourneyLayerStyles();
       setMapReady(true);
     });
 
@@ -640,6 +675,15 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
     }
     if (activeJourney) {
       try {
+        // Re-apply styles in case of style/theme changes
+        if (map.getLayer(JOURNEY_CASING_LAYER)) {
+          map.setPaintProperty(JOURNEY_CASING_LAYER, 'line-color', 'rgba(255,255,255,0.9)');
+          map.setPaintProperty(JOURNEY_CASING_LAYER, 'line-opacity', 0.9);
+        }
+        if (map.getLayer(JOURNEY_LAYER)) {
+          map.setPaintProperty(JOURNEY_LAYER, 'line-color', '#000000');
+          map.setPaintProperty(JOURNEY_LAYER, 'line-opacity', 1);
+        }
         if (map.getLayer(JOURNEY_CASING_LAYER)) map.moveLayer(JOURNEY_CASING_LAYER);
         if (map.getLayer(JOURNEY_LAYER)) map.moveLayer(JOURNEY_LAYER);
         if (map.getLayer(JOURNEY_STOPS_LAYER)) map.moveLayer(JOURNEY_STOPS_LAYER);

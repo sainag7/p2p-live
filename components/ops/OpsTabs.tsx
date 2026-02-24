@@ -4,7 +4,16 @@
 
 import React from 'react';
 
-export type OpsTabId = 'dashboard' | 'fleet' | 'counts' | 'driving' | 'complaints' | 'notes' | 'team';
+export type OpsTabId =
+  | 'dashboard'
+  | 'fleet'
+  | 'counts'
+  | 'driving'
+  | 'timesheets'
+  | 'schedule'
+  | 'complaints'
+  | 'notes'
+  | 'team';
 
 interface OpsTabsProps {
   active: OpsTabId;
@@ -17,6 +26,8 @@ const TABS: { id: OpsTabId; label: string }[] = [
   { id: 'fleet', label: 'Fleet' },
   { id: 'counts', label: 'Counts' },
   { id: 'driving', label: "Who's Driving" },
+  { id: 'timesheets', label: 'Timesheets' },
+  { id: 'schedule', label: 'Schedule' },
   { id: 'complaints', label: 'Complaints' },
   { id: 'notes', label: 'Driver Notes' },
   { id: 'team', label: 'Team' },

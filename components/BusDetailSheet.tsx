@@ -1,6 +1,45 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Vehicle, Stop, Coordinate } from '../types';
 import { X, MapPin, Navigation } from 'lucide-react';
+
+function getMockFullnessPercent(vehicle: Vehicle): number {
+  const key = `${vehicle.id}-${vehicle.nextStopEtaMin}`;
+  let hash = 0;
+  for (let i = 0; i < key.length; i++) {
+    hash = (hash * 31 + key.charCodeAt(i)) | 0;
+  }
+  const base = (Math.abs(hash) % 1000) / 1000;
+  const percent = 30 + base * 50; // 30–80
+  return Math.round(percent);
+}
+
+function getFullnessMeta(
+  percent: number
+): { label: string; textClass: string; barClass: string } {
+  if (percent <= 30)
+    return {
+      label: 'Low',
+      textClass: 'text-emerald-600',
+      barClass: 'bg-emerald-500',
+    };
+  if (percent <= 70)
+    return {
+      label: 'Moderate',
+      textClass: 'text-yellow-600',
+      barClass: 'bg-yellow-400',
+    };
+  if (percent <= 90)
+    return {
+      label: 'High',
+      textClass: 'text-orange-600',
+      barClass: 'bg-orange-500',
+    };
+  return {
+    label: 'Near Capacity',
+    textClass: 'text-red-600',
+    barClass: 'bg-red-500',
+  };
+}
 import { getDistanceMeters, getWalkTimeMinutes } from '../utils/geo';
 
 interface BusDetailSheetProps {
@@ -25,8 +64,19 @@ export const BusDetailSheet: React.FC<BusDetailSheetProps> = ({ vehicle, stops, 
     return getWalkTimeMinutes(dist);
   }, [nextStop, userLocation]);
 
+  const fullnessPercent = getMockFullnessPercent(vehicle);
+  const fullnessMeta = getFullnessMeta(fullnessPercent);
+
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
+
   return (
-    <div className="absolute inset-0 z-40 flex items-end sm:items-center sm:justify-center pointer-events-none">
+    <div className="fixed inset-0 z-40 flex items-end sm:items-center sm:justify-center pointer-events-none">
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/40 pointer-events-auto backdrop-blur-sm transition-opacity"
@@ -72,23 +122,43 @@ export const BusDetailSheet: React.FC<BusDetailSheetProps> = ({ vehicle, stops, 
           <div className="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-100">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-sm font-semibold text-gray-700">En route to <span className="text-gray-900">{getStopName(vehicle.nextStopId)}</span></span>
+              <span className="text-sm font-semibold text-gray-700">
+                En route to <span className="text-gray-900">{getStopName(vehicle.nextStopId)}</span>
+              </span>
             </div>
-            
-            <div className="flex justify-between items-center pl-5">
-               <div>
-                 <div className="text-3xl font-bold text-gray-900">{vehicle.nextStopEtaMin}<span className="text-lg font-medium text-gray-500 ml-1">min</span></div>
-                 <div className="text-xs text-gray-400">Estimated Arrival</div>
-               </div>
-               {walkToNextStop !== null && (
-                 <div className="text-right">
-                    <div className="flex items-center justify-end text-p2p-blue gap-1">
-                      <Navigation size={14} />
-                      <span className="font-bold">{walkToNextStop} min</span>
-                    </div>
-                    <div className="text-xs text-gray-400">Walk to stop</div>
-                 </div>
-               )}
+
+            <div className="flex justify-between items-center pl-5 mb-3">
+              <div>
+                <div className="text-3xl font-bold text-gray-900">
+                  {vehicle.nextStopEtaMin}
+                  <span className="text-lg font-medium text-gray-500 ml-1">min</span>
+                </div>
+                <div className="text-xs text-gray-400">Estimated Arrival</div>
+              </div>
+              {walkToNextStop !== null && (
+                <div className="text-right">
+                  <div className="flex items-center justify-end text-p2p-blue gap-1">
+                    <Navigation size={14} />
+                    <span className="font-bold">{walkToNextStop} min</span>
+                  </div>
+                  <div className="text-xs text-gray-400">Walk to stop</div>
+                </div>
+              )}
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
+                <span>Real-Time Fullness</span>
+                <span className={`font-semibold ${fullnessMeta.textClass}`}>
+                  {fullnessPercent}% ({fullnessMeta.label})
+                </span>
+              </div>
+              <div className="h-2 bg-white rounded-full overflow-hidden border border-gray-200/70">
+                <div
+                  className={`h-full rounded-full ${fullnessMeta.barClass}`}
+                  style={{ width: `${fullnessPercent}%` }}
+                />
+              </div>
             </div>
           </div>
 

@@ -3,7 +3,7 @@
  * TODO: Replace mock data with /api/ops/* endpoints.
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { OpsLayout } from '../../ops/OpsLayout';
 import {
   MOCK_FLEET_SUMMARY,
@@ -33,8 +33,16 @@ import { getDriverDisplayName, getDriverAvatarUrl } from '../../storage/opsProfi
 import { getRosterName, getRosterAvatar } from '../../data/opsRoster';
 import { ComplaintsSummaryCard } from '../../components/ops/ComplaintsSummaryCard';
 import { Avatar } from '../../components/ops/Avatar';
-import { Bus, Users, TrendingUp, AlertCircle, MapPin } from 'lucide-react';
+import { Bus, Users, TrendingUp, AlertCircle, MapPin, Download } from 'lucide-react';
 import { VEHICLES } from '../../data/mockTransit';
+import { formatShiftDuration } from '../../utils/format';
+import {
+  ensureSeededTimesheetsAndSchedule,
+  getSeededTimesheets,
+  getSeededSchedule,
+  type TimesheetEntry,
+  type ScheduleDay,
+} from '../../storage/timesheetsSeed';
 
 export function OpsManagerPage() {
   const [activeTab, setActiveTab] = useState<OpsTabId>('dashboard');
@@ -43,9 +51,32 @@ export function OpsManagerPage() {
   const [noteSearch, setNoteSearch] = useState('');
   const [selectedNote, setSelectedNote] = useState<{ driverId: string; driverName: string; date: string; text: string; updatedAt: number; tags?: string[] } | null>(null);
   const [driversVersion, setDriversVersion] = useState(0);
+  const [timesheetFrom, setTimesheetFrom] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 6);
+    return d.toISOString().slice(0, 10);
+  });
+  const [timesheetTo, setTimesheetTo] = useState(() => new Date().toISOString().slice(0, 10));
+  const [timesheetDriver, setTimesheetDriver] = useState<string>('all');
+  const [timesheetRoute, setTimesheetRoute] = useState<string>('all');
+  const [scheduleFrom, setScheduleFrom] = useState(() => new Date().toISOString().slice(0, 10));
+  const [scheduleTo, setScheduleTo] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 6);
+    return d.toISOString().slice(0, 10);
+  });
+  const [scheduleRole, setScheduleRole] = useState<'both' | 'drivers' | 'managers'>('both');
   const admins = listAdmins();
   const managers = listManagers();
   const drivers = listDrivers();
+
+  useEffect(() => {
+    // Dev-only seeding of fake timesheets + schedule. Safe to call in prod (no-op if already seeded).
+    ensureSeededTimesheetsAndSchedule({
+      drivers: drivers.map((d) => ({ id: d.id, name: getDisplayName(d) })),
+      managers: managers.map((m) => ({ id: m.id, name: getDisplayName(m) })),
+    });
+  }, [drivers, managers]);
 
   const unresolvedCount = useMemo(() => MOCK_COMPLAINTS.filter((c) => (complaintStates[c.id]?.status ?? 'new') !== 'resolved').length, [complaintStates]);
 
@@ -77,7 +108,118 @@ export function OpsManagerPage() {
     ? notesWithNames.filter((n) => n.note.text.toLowerCase().includes(noteSearch.toLowerCase()) || n.driverName.toLowerCase().includes(noteSearch.toLowerCase()))
     : notesWithNames;
 
-  const toggleFlag = (key: string) => setFlaggedNotes((prev) => ({ ...prev, [key]: !prev[key] }));
+  const toggleFlag = (key: string) =>
+    setFlaggedNotes((prev) => ({ ...prev, [key]: !prev[key] }));
+
+  const timesheetEntries = useMemo(() => {
+    const fromDate = new Date(timesheetFrom);
+    const toDate = new Date(timesheetTo);
+    toDate.setHours(23, 59, 59, 999);
+
+    const seeded: TimesheetEntry[] = getSeededTimesheets();
+    const seededMapped = seeded.map((e) => ({
+      driverId: e.driverId,
+      driverName: e.driverName,
+      routeName: e.routeName,
+      clockInAt: e.shiftStart,
+      clockOutAt: e.shiftEnd,
+      durationMinutes: e.durationMinutes,
+      routeCompletionPercent: e.percentRouteCompleted,
+      source: 'seed' as const,
+    }));
+
+    const fromOps = getAllDriverShifts().map(({ driverId, shift }) => ({
+      driverId,
+      driverName: getDriverDisplayName(driverId, getRosterName(driverId)),
+      routeName: shift.routeName,
+      clockInAt: shift.clockInAt,
+      clockOutAt: shift.clockOutAt,
+      durationMinutes: shift.clockOutAt
+        ? Math.max(0, Math.floor((shift.clockOutAt - shift.clockInAt) / 60000))
+        : null,
+      routeCompletionPercent: shift.routeCompletionPercent,
+      source: 'ops' as const,
+    }));
+
+    const combined = [...fromOps, ...seededMapped];
+
+    return combined
+      .filter((e) => timesheetDriver === 'all' || e.driverId === timesheetDriver)
+      .filter((e) => {
+        const start = new Date(e.clockInAt);
+        return start >= fromDate && start <= toDate;
+      })
+      .filter((e) => timesheetRoute === 'all' || e.routeName === timesheetRoute)
+      .sort((a, b) => b.clockInAt - a.clockInAt);
+  }, [timesheetFrom, timesheetTo, timesheetDriver, timesheetRoute, driversVersion]);
+
+  const scheduleDays = useMemo(() => {
+    const raw: ScheduleDay[] = getSeededSchedule();
+    const fromDate = new Date(scheduleFrom);
+    const toDate = new Date(scheduleTo);
+    toDate.setHours(23, 59, 59, 999);
+    return raw
+      .filter((d) => {
+        const day = new Date(d.date);
+        return day >= fromDate && day <= toDate;
+      })
+      .map((d) => ({
+        ...d,
+        blocks: d.blocks.filter((b) => {
+          if (scheduleRole === 'both') return true;
+          if (scheduleRole === 'drivers') return b.role === 'driver';
+          return b.role === 'manager';
+        }),
+      }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+  }, [scheduleFrom, scheduleTo, scheduleRole]);
+
+  const timesheetTotals = useMemo(() => {
+    const totalMinutes = timesheetEntries.reduce(
+      (sum, e) => sum + (e.durationMinutes ?? 0),
+      0
+    );
+    return {
+      totalShifts: timesheetEntries.length,
+      totalMinutes,
+    };
+  }, [timesheetEntries]);
+
+  const handleExportTimesheetCsv = () => {
+    if (!timesheetEntries.length) return;
+    const header = [
+      'Date',
+      'Driver',
+      'Route',
+      'Start',
+      'End',
+      'DurationMinutes',
+      'RouteCompletionPercent',
+    ];
+    const rows = timesheetEntries.map((e) => {
+      const start = new Date(e.clockInAt);
+      const end = e.clockOutAt ? new Date(e.clockOutAt) : null;
+      return [
+        start.toISOString().slice(0, 10),
+        `"${e.driverName}"`,
+        `"${e.routeName}"`,
+        start.toISOString(),
+        end ? end.toISOString() : '',
+        e.durationMinutes ?? '',
+        e.routeCompletionPercent ?? '',
+      ].join(',');
+    });
+    const csv = [header.join(','), ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `p2p-timesheet-${timesheetFrom}-to-${timesheetTo}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <OpsLayout title="Manager">
@@ -230,6 +372,284 @@ export function OpsManagerPage() {
                     </tbody>
                   </table>
                 </div>
+              </div>
+            )}
+
+            {activeTab === 'timesheets' && (
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden space-y-4">
+                <div className="px-4 py-3 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div>
+                    <h2 className="text-sm font-semibold text-gray-900">Timesheets</h2>
+                    <p className="text-xs text-gray-500">
+                      View driver shifts and route completion over a date range.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleExportTimesheetCsv}
+                    disabled={!timesheetEntries.length}
+                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Download size={14} />
+                    <span>Export CSV</span>
+                  </button>
+                </div>
+
+                <div className="px-4 pt-2 pb-3 flex flex-col md:flex-row md:items-end gap-3 border-b border-gray-50">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-semibold text-gray-500">From</label>
+                    <input
+                      type="date"
+                      value={timesheetFrom}
+                      onChange={(e) => setTimesheetFrom(e.target.value)}
+                      className="px-2 py-1.5 rounded-lg border border-gray-200 text-sm focus:border-p2p-blue focus:ring-1 focus:ring-p2p-blue outline-none"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-semibold text-gray-500">To</label>
+                    <input
+                      type="date"
+                      value={timesheetTo}
+                      onChange={(e) => setTimesheetTo(e.target.value)}
+                      className="px-2 py-1.5 rounded-lg border border-gray-200 text-sm focus:border-p2p-blue focus:ring-1 focus:ring-p2p-blue outline-none"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1 md:ml-4">
+                    <label className="text-xs font-semibold text-gray-500">Driver</label>
+                    <select
+                      value={timesheetDriver}
+                      onChange={(e) => setTimesheetDriver(e.target.value)}
+                      className="px-2 py-1.5 rounded-lg border border-gray-200 text-sm focus:border-p2p-blue focus:ring-1 focus:ring-p2p-blue outline-none min-w-[160px]"
+                    >
+                      <option value="all">All drivers</option>
+                      {drivers.map((d) => (
+                        <option key={d.id} value={d.id}>
+                          {getDisplayName(d)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1 md:ml-2">
+                    <label className="text-xs font-semibold text-gray-500">Route</label>
+                    <select
+                      value={timesheetRoute}
+                      onChange={(e) => setTimesheetRoute(e.target.value)}
+                      className="px-2 py-1.5 rounded-lg border border-gray-200 text-sm focus:border-p2p-blue focus:ring-1 focus:ring-p2p-blue outline-none min-w-[140px]"
+                    >
+                      <option value="all">All routes</option>
+                      <option value="P2P Express">P2P Express</option>
+                      <option value="Baity Hill">Baity Hill</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="px-4 pb-3 text-xs text-gray-500 flex flex-wrap gap-3 justify-between">
+                  <span>
+                    Total shifts: <span className="font-semibold">{timesheetTotals.totalShifts}</span>
+                  </span>
+                  <span>
+                    Total hours:{' '}
+                    <span className="font-semibold">
+                      {formatShiftDuration(timesheetTotals.totalMinutes)}
+                    </span>
+                  </span>
+                </div>
+
+                {/* Desktop table */}
+                <div className="hidden md:block border-t border-gray-100">
+                  {timesheetEntries.length === 0 ? (
+                    <p className="px-4 py-6 text-sm text-gray-500">No shifts in this range.</p>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-gray-100 bg-gray-50/50">
+                            <th className="text-left py-3 px-4 font-semibold text-gray-700">Date</th>
+                            <th className="text-left py-3 px-4 font-semibold text-gray-700">Driver</th>
+                            <th className="text-left py-3 px-4 font-semibold text-gray-700">Route</th>
+                            <th className="text-left py-3 px-4 font-semibold text-gray-700">Start</th>
+                            <th className="text-left py-3 px-4 font-semibold text-gray-700">End</th>
+                            <th className="text-left py-3 px-4 font-semibold text-gray-700">Duration</th>
+                            <th className="text-left py-3 px-4 font-semibold text-gray-700">% Completed</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {timesheetEntries.map((e) => {
+                            const start = new Date(e.clockInAt);
+                            const end = e.clockOutAt ? new Date(e.clockOutAt) : null;
+                            return (
+                              <tr key={`${e.driverId}-${e.clockInAt}`} className="border-b border-gray-50">
+                                <td className="py-3 px-4 text-gray-700">
+                                  {start.toLocaleDateString()}
+                                </td>
+                                <td className="py-3 px-4 text-gray-900 font-medium">
+                                  {e.driverName}
+                                </td>
+                                <td className="py-3 px-4 text-gray-700">{e.routeName}</td>
+                                <td className="py-3 px-4 text-gray-600 text-xs">
+                                  {start.toLocaleTimeString()}
+                                </td>
+                                <td className="py-3 px-4 text-gray-600 text-xs">
+                                  {end ? end.toLocaleTimeString() : '—'}
+                                </td>
+                                <td className="py-3 px-4 text-gray-700">
+                                  {e.durationMinutes != null
+                                    ? formatShiftDuration(e.durationMinutes)
+                                    : '—'}
+                                </td>
+                                <td className="py-3 px-4 text-gray-700">
+                                  {e.routeCompletionPercent != null
+                                    ? `${Math.round(e.routeCompletionPercent)}%`
+                                    : '—'}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+
+                {/* Mobile cards */}
+                <div className="md:hidden border-t border-gray-100">
+                  {timesheetEntries.length === 0 ? (
+                    <p className="px-4 py-6 text-sm text-gray-500">No shifts in this range.</p>
+                  ) : (
+                    <div className="divide-y divide-gray-50">
+                      {timesheetEntries.map((e) => {
+                        const start = new Date(e.clockInAt);
+                        const end = e.clockOutAt ? new Date(e.clockOutAt) : null;
+                        return (
+                          <div
+                            key={`${e.driverId}-${e.clockInAt}`}
+                            className="px-4 py-3 space-y-1.5"
+                          >
+                            <div className="flex items-center justify-between">
+                              <p className="text-sm font-semibold text-gray-900">
+                                {e.driverName}
+                              </p>
+                              <p className="text-xs text-gray-500">{start.toLocaleDateString()}</p>
+                            </div>
+                            <p className="text-xs text-gray-600">
+                              {e.routeName} •{' '}
+                              {start.toLocaleTimeString()} – {end ? end.toLocaleTimeString() : '—'}
+                            </p>
+                            <p className="text-xs text-gray-600">
+                              Duration:{' '}
+                              <span className="font-medium">
+                                {e.durationMinutes != null
+                                  ? formatShiftDuration(e.durationMinutes)
+                                  : '—'}
+                              </span>
+                            </p>
+                            <p className="text-xs text-gray-600">
+                              % Completed:{' '}
+                              <span className="font-medium">
+                                {e.routeCompletionPercent != null
+                                  ? `${Math.round(e.routeCompletionPercent)}%`
+                                  : '—'}
+                              </span>
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'schedule' && (
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className="px-4 py-3 border-b border-gray-100">
+                  <h2 className="text-sm font-semibold text-gray-900">Schedule</h2>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Upcoming shifts for drivers and managers on duty.
+                  </p>
+                </div>
+                <div className="px-4 py-3 flex flex-col md:flex-row md:items-end gap-3 border-b border-gray-50">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-semibold text-gray-500">From</label>
+                    <input
+                      type="date"
+                      value={scheduleFrom}
+                      onChange={(e) => setScheduleFrom(e.target.value)}
+                      className="px-2 py-1.5 rounded-lg border border-gray-200 text-sm focus:border-p2p-blue focus:ring-1 focus:ring-p2p-blue outline-none"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-semibold text-gray-500">To</label>
+                    <input
+                      type="date"
+                      value={scheduleTo}
+                      onChange={(e) => setScheduleTo(e.target.value)}
+                      className="px-2 py-1.5 rounded-lg border border-gray-200 text-sm focus:border-p2p-blue focus:ring-1 focus:ring-p2p-blue outline-none"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1 md:ml-4">
+                    <label className="text-xs font-semibold text-gray-500">Role</label>
+                    <select
+                      value={scheduleRole}
+                      onChange={(e) => setScheduleRole(e.target.value as any)}
+                      className="px-2 py-1.5 rounded-lg border border-gray-200 text-sm focus:border-p2p-blue focus:ring-1 focus:ring-p2p-blue outline-none min-w-[160px]"
+                    >
+                      <option value="both">Drivers + Managers</option>
+                      <option value="drivers">Drivers only</option>
+                      <option value="managers">Managers only</option>
+                    </select>
+                  </div>
+                </div>
+
+                {scheduleDays.length === 0 ? (
+                  <p className="px-4 py-6 text-sm text-gray-500">No schedule entries in this range.</p>
+                ) : (
+                  <div className="divide-y divide-gray-50">
+                    {scheduleDays.map((day) => (
+                      <div key={day.date} className="px-4 py-4">
+                        <div className="flex items-baseline justify-between mb-3">
+                          <h3 className="text-sm font-bold text-gray-900">{new Date(day.date).toLocaleDateString()}</h3>
+                          <span className="text-xs text-gray-500">{day.blocks.length} blocks</span>
+                        </div>
+                        <div className="grid gap-2 md:grid-cols-2">
+                          {day.blocks.map((b, idx) => {
+                            const start = new Date(b.shiftStart);
+                            const end = new Date(b.shiftEnd);
+                            const isDriver = b.role === 'driver';
+                            return (
+                              <div
+                                key={`${b.personId}-${idx}`}
+                                className="p-3 rounded-xl border border-gray-100 bg-gray-50 flex items-center justify-between gap-3"
+                              >
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                                      isDriver ? 'bg-p2p-blue/10 text-p2p-blue' : 'bg-emerald-500/10 text-emerald-700'
+                                    }`}>
+                                      {isDriver ? 'Driver' : 'Manager'}
+                                    </span>
+                                    {isDriver && b.routeName && (
+                                      <span className="text-[11px] font-semibold text-gray-600">{b.routeName}</span>
+                                    )}
+                                  </div>
+                                  <div className="font-medium text-gray-900 truncate">{b.personName}</div>
+                                </div>
+                                <div className="shrink-0 text-right">
+                                  <div className="text-xs font-semibold text-gray-700">
+                                    {start.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })} – {end.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}
+                                  </div>
+                                  <div className="text-[11px] text-gray-500">
+                                    {formatShiftDuration(Math.max(0, Math.floor((b.shiftEnd - b.shiftStart) / 60000)))}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
