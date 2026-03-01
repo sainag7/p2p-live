@@ -27,6 +27,7 @@ const P2P_EXPRESS_STOPS_SOURCE = 'p2p-express-stops-source';
 const BAITY_HILL_STOPS_SOURCE = 'baity-hill-stops-source';
 const P2P_EXPRESS_LINE_LAYER = 'p2p-express-line-layer';
 const BAITY_HILL_LINE_LAYER = 'baity-hill-line-layer';
+const BAITY_HILL_LINE_OVERLAP_LAYER = 'baity-hill-line-overlap-layer';
 const EXPRESS_ARROWS_LAYER = 'express-arrows';
 const BAITY_ARROWS_LAYER = 'baity-arrows';
 const P2P_EXPRESS_STOPS_LAYER = 'p2p-express-stops-layer';
@@ -47,6 +48,79 @@ const DESTINATION_LAYER = 'destination-layer';
 const ROUTE_COLORS = { P2P_EXPRESS: '#418FC5', BAITY_HILL: '#C33934' } as const;
 const BUS_SPEED_MPS = 6;
 const TICK_MS = 300;
+
+/** Overlap tolerance in meters (2–5m for "same corridor"). */
+const OVERLAP_TOLERANCE_METERS = 4;
+
+type LineStringCoords = [number, number][];
+
+type BaitySegmentFeature = {
+  type: 'Feature';
+  geometry: { type: 'LineString'; coordinates: LineStringCoords };
+  properties: { overlap: boolean };
+};
+
+function haversineDistanceMeters(a: [number, number], b: [number, number]): number {
+  const R = 6371000;
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+  const dLat = toRad(b[1] - a[1]);
+  const dLon = toRad(b[0] - a[0]);
+  const lat1 = toRad(a[1]);
+  const lat2 = toRad(b[1]);
+  const x = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.min(1, Math.sqrt(x)));
+}
+
+function nearestDistanceToPolylineMeters(point: [number, number], line: LineStringCoords): number {
+  let min = Infinity;
+  for (let i = 0; i < line.length; i++) {
+    const d = haversineDistanceMeters(point, line[i]);
+    if (d < min) min = d;
+  }
+  return min;
+}
+
+function splitBaityByOverlap(
+  baity: LineStringCoords,
+  express: LineStringCoords | undefined,
+  toleranceMeters: number
+): { baseFeatures: BaitySegmentFeature[]; overlapFeatures: BaitySegmentFeature[] } {
+  const baseFeatures: BaitySegmentFeature[] = [];
+  const overlapFeatures: BaitySegmentFeature[] = [];
+
+  if (baity.length < 2) return { baseFeatures, overlapFeatures };
+
+  const push = (coords: LineStringCoords, overlap: boolean) => {
+    if (coords.length < 2) return;
+    const feature = { type: 'Feature' as const, geometry: { type: 'LineString' as const, coordinates: coords }, properties: { overlap } };
+    if (overlap) overlapFeatures.push(feature);
+    else baseFeatures.push(feature);
+  };
+
+  if (!express || express.length < 2) {
+    push(baity, false);
+    return { baseFeatures, overlapFeatures };
+  }
+
+  const isOverlap: boolean[] = baity.map((pt) => nearestDistanceToPolylineMeters(pt, express) <= toleranceMeters);
+
+  let run: LineStringCoords = [baity[0]];
+  let runOverlap = isOverlap[0] ?? false;
+
+  for (let i = 1; i < baity.length; i++) {
+    const overlap = isOverlap[i] ?? false;
+    if (overlap === runOverlap) {
+      run.push(baity[i]);
+    } else {
+      push(run, runOverlap);
+      run = [baity[i - 1], baity[i]];
+      runOverlap = overlap;
+    }
+  }
+  push(run, runOverlap);
+
+  return { baseFeatures, overlapFeatures };
+}
 
 /** Create a small arrow image (right-pointing) for route direction. Mapbox often fails to load SVG. */
 function createArrowImageData(): { width: number; height: number; data: Uint8Array | Uint8ClampedArray } {
@@ -298,7 +372,12 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
           ]);
         }
         if (map.getLayer(JOURNEY_LAYER)) {
-          map.setPaintProperty(JOURNEY_LAYER, 'line-color', '#000000');
+          map.setPaintProperty(JOURNEY_LAYER, 'line-color', [
+            'case',
+            ['==', ['get', 'segmentType'], 'walk'],
+            'rgba(78, 78, 78, 0.8)',
+            '#000000',
+          ]);
           map.setPaintProperty(JOURNEY_LAYER, 'line-opacity', 1);
           map.setPaintProperty(JOURNEY_LAYER, 'line-width', [
             'interpolate',
@@ -361,6 +440,7 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
         type: 'line',
         source: BAITY_HILL_LINE_SOURCE,
         layout: { 'line-join': 'round', 'line-cap': 'round' },
+        filter: ['==', ['get', 'overlap'], false],
         paint: {
           'line-color': ROUTE_COLORS.BAITY_HILL,
           'line-width': [
@@ -372,6 +452,27 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
             18, 5,
           ],
           'line-opacity': 0.9,
+        },
+      });
+      map.addLayer({
+        id: BAITY_HILL_LINE_OVERLAP_LAYER,
+        type: 'line',
+        source: BAITY_HILL_LINE_SOURCE,
+        layout: { 'line-join': 'round', 'line-cap': 'round' },
+        filter: ['==', ['get', 'overlap'], true],
+        paint: {
+          'line-color': ROUTE_COLORS.BAITY_HILL,
+          'line-width': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            12, 3,
+            16, 4,
+            18, 5,
+          ],
+          'line-opacity': 0.9,
+          'line-translate': [6, 0],
+          'line-translate-anchor': 'map',
         },
       });
 
@@ -595,7 +696,12 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
         source: JOURNEY_SOURCE,
         layout: { 'line-join': 'round', 'line-cap': 'round' },
         paint: {
-          'line-color': '#000000',
+          'line-color': [
+            'case',
+            ['==', ['get', 'segmentType'], 'walk'],
+            'rgba(78, 78, 78, 0.8)',
+            '#000000',
+          ],
           'line-opacity': 1,
           'line-width': [
             'interpolate',
@@ -695,7 +801,12 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
           map.setPaintProperty(JOURNEY_CASING_LAYER, 'line-opacity', 0.9);
         }
         if (map.getLayer(JOURNEY_LAYER)) {
-          map.setPaintProperty(JOURNEY_LAYER, 'line-color', '#000000');
+          map.setPaintProperty(JOURNEY_LAYER, 'line-color', [
+            'case',
+            ['==', ['get', 'segmentType'], 'walk'],
+            'rgba(78, 78, 78, 0.8)',
+            '#000000',
+          ]);
           map.setPaintProperty(JOURNEY_LAYER, 'line-opacity', 1);
         }
         if (map.getLayer(JOURNEY_CASING_LAYER)) map.moveLayer(JOURNEY_CASING_LAYER);
@@ -724,6 +835,36 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
     if (!mapReady || !mapRef.current) return;
     const map = mapRef.current;
 
+    const updateRouteLineSources = () => {
+      const expressCoords = routeGeomsRef.current.P2P_EXPRESS;
+      const baityCoords = routeGeomsRef.current.BAITY_HILL;
+      const expressSrc = map.getSource(P2P_EXPRESS_LINE_SOURCE) as GeoJSONSource | undefined;
+      const baitySrc = map.getSource(BAITY_HILL_LINE_SOURCE) as GeoJSONSource | undefined;
+
+      if (expressSrc && expressCoords && expressCoords.length > 1) {
+        expressSrc.setData({
+          type: 'FeatureCollection',
+          features: [
+            {
+              type: 'Feature',
+              geometry: { type: 'LineString', coordinates: expressCoords },
+              properties: {},
+            },
+          ],
+        });
+      }
+
+      if (baitySrc && baityCoords && baityCoords.length > 1) {
+        const { baseFeatures, overlapFeatures } = splitBaityByOverlap(
+          baityCoords,
+          expressCoords,
+          OVERLAP_TOLERANCE_METERS
+        );
+        const features = [...baseFeatures, ...overlapFeatures];
+        baitySrc.setData({ type: 'FeatureCollection', features });
+      }
+    };
+
     (['P2P_EXPRESS', 'BAITY_HILL'] as const).forEach((routeId) => {
       fetch(`${API}/api/mapbox/route?routeId=${routeId}`)
         .then((res) => (res.ok ? res.json() : Promise.reject(new Error(res.statusText))))
@@ -737,20 +878,7 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
             routeGeomsRef.current.BAITY_HILL = coords;
             interpolatorsRef.current.BAITY_HILL = createRouteInterpolator(coords);
           }
-          const sourceId = routeId === 'P2P_EXPRESS' ? P2P_EXPRESS_LINE_SOURCE : BAITY_HILL_LINE_SOURCE;
-          const src = map.getSource(sourceId) as GeoJSONSource | undefined;
-          if (src) {
-            src.setData({
-              type: 'FeatureCollection',
-              features: [
-                {
-                  type: 'Feature',
-                  geometry: { type: 'LineString' as const, coordinates: data.geometry!.coordinates },
-                  properties: {},
-                },
-              ],
-            });
-          }
+          updateRouteLineSources();
         })
         .catch((err) => console.warn('Route fetch failed', routeId, err));
     });
@@ -914,7 +1042,7 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
         /* ignore */
       }
     });
-    [BAITY_HILL_LINE_LAYER, BAITY_ARROWS_LAYER, BAITY_HILL_STOPS_LAYER].forEach((id) => {
+    [BAITY_HILL_LINE_LAYER, BAITY_HILL_LINE_OVERLAP_LAYER, BAITY_ARROWS_LAYER, BAITY_HILL_STOPS_LAYER].forEach((id) => {
       try {
         if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', vis(showBaity));
       } catch {

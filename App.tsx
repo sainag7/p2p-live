@@ -71,14 +71,14 @@ function App() {
   }, []);
 
   return (
-    <div className="min-h-[100dvh] h-full w-full flex flex-col bg-gray-50 overflow-hidden relative">
+    <div className="min-h-[100dvh] h-full w-full flex flex-col bg-gray-50 relative">
       <AppHeader loadingLoc={loadingLoc} />
 
-      {/* Main Content Area */}
-      <main className="flex-1 relative overflow-hidden">
+      {/* Main Content Area: flex-1 min-h-0 so list can scroll */}
+      <main className="flex-1 min-h-0 flex flex-col relative">
         {view === 'list' && (
           <div
-            className="h-full overflow-y-auto no-scrollbar pb-20"
+            className="flex-1 min-h-0 overflow-y-auto no-scrollbar pb-20"
             style={{ WebkitOverflowScrolling: 'touch' }}
           >
             {/* Closest Stop section: same horizontal padding as Active Buses */}
@@ -123,7 +123,7 @@ function App() {
 
         {view === 'plan' && (
           <div
-            className="h-full overflow-y-auto no-scrollbar pb-20"
+            className="flex-1 min-h-0 overflow-y-auto no-scrollbar pb-20"
             style={{ WebkitOverflowScrolling: 'touch' }}
           >
             <PlanTripView 

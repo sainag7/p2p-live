@@ -38,12 +38,18 @@ export function AppHeader({ loadingLoc = false }: AppHeaderProps) {
   return (
     <header className="bg-white border-b border-gray-100 pt-12 pb-3 px-4 flex justify-between items-center shadow-sm z-10 shrink-0">
       <div className="flex items-center gap-2">
-        <h1 className="text-2xl font-black text-p2p-blue tracking-tight">
-          P<span className="text-p2p-red">2</span>P <span className="text-p2p-black">Live</span>
-        </h1>
-        <span className="px-2 py-0.5 bg-p2p-light-red/30 text-p2p-red text-[10px] font-bold uppercase rounded-full tracking-wide">
-          UNC Chapel Hill
-        </span>
+        <Link
+          to="/"
+          className="cursor-pointer flex items-center gap-2 outline-none focus:ring-2 focus:ring-p2p-blue focus:ring-offset-2 rounded"
+          aria-label="Go to homepage"
+        >
+          <h1 className="text-2xl font-black text-p2p-blue tracking-tight">
+            P<span className="text-p2p-red">2</span>P <span className="text-p2p-black">Live</span>
+          </h1>
+          <span className="px-2 py-0.5 bg-p2p-light-red/30 text-p2p-red text-[10px] font-bold uppercase rounded-full tracking-wide">
+            UNC Chapel Hill
+          </span>
+        </Link>
       </div>
       <div className="flex items-center gap-2 sm:gap-3">
         {loadingLoc && <LocateFixed className="animate-spin text-gray-300 shrink-0" size={20} aria-hidden />}

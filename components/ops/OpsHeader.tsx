@@ -45,7 +45,8 @@ export function OpsHeader() {
       <div className="flex items-center gap-3 min-w-0">
         <Link
           to="/"
-          className="text-lg font-black text-p2p-blue tracking-tight shrink-0"
+          className="cursor-pointer text-lg font-black text-p2p-blue tracking-tight shrink-0 outline-none focus:ring-2 focus:ring-p2p-blue focus:ring-offset-2 rounded"
+          aria-label="Go to homepage"
         >
           P<span className="text-p2p-red">2</span>P <span className="text-p2p-black">Live</span>
         </Link>
