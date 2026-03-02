@@ -13,7 +13,7 @@ const fs = require('fs');
 
 const PORT = process.env.PORT || process.env.OPS_API_PORT || 3001;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-pro';
 const MAPBOX_TOKEN = process.env.MAPBOX_TOKEN;
 const CACHE_TTL_MS = 60 * 1000; // 60 seconds
 const ROUTE_CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
@@ -187,36 +187,72 @@ async function generateSummaryWithGemini(complaints) {
   if (!GEMINI_API_KEY) {
     throw new Error('GEMINI_API_KEY is not set');
   }
-  const prompt = `You are an operations analyst. Summarize the following transit complaints in a concise, actionable way (150-250 words).
+  // Import Gemini SDK dynamically so this file can stay CommonJS.
+  const { GoogleGenerativeAI } = await import('@google/generative-ai');
+  const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+  const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
 
-Requirements:
-- Group by category (e.g. GPS issues, overcrowding, off-route, maintenance).
-- Mention counts per category and any top recurring issues.
-- Suggest 2-4 next actions (operational and/or technical).
-- Use short bullets where appropriate.
+  const prompt = `You are an operations analyst for a campus late-night bus service.
 
-Complaints (JSON):
+Summarize the following transit complaints into:
+- Key recurring issues (grouped by category such as GPS issues, overcrowding, off-route, maintenance)
+- The single most urgent problem for tonight
+- 2–4 concrete operational focus areas for the next shift (very specific actions)
+
+Constraints:
+- Use short sections with clear labels, but do NOT use markdown headings or bold (no **, ##, etc.).
+- Use simple bullet lines starting with \"- \" when listing items.
+- Keep the summary between 150 and 250 words.
+
+Complaints (JSON array):
 ${JSON.stringify(complaints, null, 0)}
 
-Respond with only the summary text (no preamble).`;
+Respond with plain text only.`;
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: { maxOutputTokens: 1024, temperature: 0.3 },
-    }),
-  });
-  if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`Gemini API error ${res.status}: ${errText}`);
+  const result = await model.generateContent(prompt);
+  const response = await result.response;
+  const text = response.text();
+  if (!text || !text.trim()) throw new Error('Empty or invalid Gemini response');
+  return text.trim();
+}
+
+function buildFallbackComplaintsSummary(complaints) {
+  if (!complaints || complaints.length === 0) {
+    return 'There are currently no active complaints in the system. Continue normal operations and monitor for any new reports from drivers or riders.';
   }
-  const data = await res.json();
-  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) throw new Error('Empty or invalid Gemini response');
-  return text;
+  const byCategory = {};
+  let newestTs = 0;
+  let newest = null;
+  for (const c of complaints) {
+    const cat = c.category || 'Other';
+    byCategory[cat] = (byCategory[cat] || 0) + 1;
+    const ts = Date.parse(c.timestamp || '');
+    if (!Number.isNaN(ts) && ts > newestTs) {
+      newestTs = ts;
+      newest = c;
+    }
+  }
+  const total = complaints.length;
+  const parts = [];
+  parts.push(`There are ${total} active complaints in the last shift.`);
+  const cats = Object.keys(byCategory)
+    .sort((a, b) => byCategory[b] - byCategory[a])
+    .map((cat) => `- ${cat}: ${byCategory[cat]} issue(s)`);
+  if (cats.length) {
+    parts.push('');
+    parts.push('Key categories:');
+    parts.push(...cats);
+  }
+  if (newest) {
+    parts.push('');
+    parts.push(`Most recent issue appears on ${new Date(newest.timestamp).toLocaleString()} on route ${newest.route} (bus ${newest.busId}): ${newest.category} — ${newest.title}.`);
+  }
+  parts.push('');
+  parts.push('Operational focus for tonight:');
+  parts.push('- Monitor buses with recent GPS or tracking issues and verify backup displays before departure.');
+  parts.push('- Watch for overcrowding at Student Union and key late-night stops; consider short-term reinforcements if patterns persist.');
+  parts.push('- Ensure maintenance follows up on any safety-related items (door sensors, braking, lighting) before the next high-demand window.');
+  return parts.join('\n');
 }
 
 async function handleComplaintsSummary(req, body, res) {
@@ -240,8 +276,17 @@ async function handleComplaintsSummary(req, body, res) {
     res.end(JSON.stringify(payload));
   } catch (err) {
     console.error('Complaints summary error:', err.message);
-    res.writeHead(500, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: err.message, generatedAtISO: null, model: null }));
+    // Fall back to a simple server-generated summary so UI still shows something.
+    const fallback = buildFallbackComplaintsSummary(complaints);
+    const payload = {
+      summaryMarkdown: fallback,
+      generatedAtISO: new Date().toISOString(),
+      model: 'fallback',
+    };
+    summaryCache = { ...payload, generatedAt: Date.now() };
+    cacheKey = key;
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(payload));
   }
 }
 
