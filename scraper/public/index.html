@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UNC Bus Arrivals</title>
+  <style>
+    /* ── Reset ─────────────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── Base ──────────────────────────────────────────────────────────────── */
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f0f4f8;
+      color: #1a202c;
+      min-height: 100vh;
+    }
+
+    /* ── Header ────────────────────────────────────────────────────────────── */
+    header {
+      background: #1a56db;
+      color: #fff;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    header h1 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    #last-updated {
+      font-size: 0.78rem;
+      opacity: 0.8;
+      white-space: nowrap;
+    }
+    #loading-spinner {
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Status bar ────────────────────────────────────────────────────────── */
+    #status-bar {
+      background: #dbeafe;
+      color: #1e40af;
+      font-size: 0.82rem;
+      padding: 7px 24px;
+      border-bottom: 1px solid #bfdbfe;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    #status-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #22c55e;
+      flex-shrink: 0;
+      transition: background 0.3s;
+    }
+    #status-dot.warn  { background: #f59e0b; }
+    #status-dot.error { background: #ef4444; }
+
+    /* ── Main ──────────────────────────────────────────────────────────────── */
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px 20px 40px;
+    }
+
+    /* ── Controls ──────────────────────────────────────────────────────────── */
+    #controls {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    #controls label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #4a5568;
+    }
+    #route-filter {
+      padding: 7px 12px;
+      border: 1px solid #cbd5e0;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      background: #fff;
+      cursor: pointer;
+      min-width: 180px;
+    }
+    #count-badge {
+      margin-left: auto;
+      font-size: 0.8rem;
+      color: #718096;
+      background: #e2e8f0;
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+
+    /* ── Legend ────────────────────────────────────────────────────────────── */
+    #legend {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      font-size: 0.78rem;
+      color: #4a5568;
+      margin-bottom: 16px;
+    }
+    .legend-item { display: flex; align-items: center; gap: 6px; }
+    .legend-dot {
+      width: 10px; height: 26px;
+      border-radius: 3px;
+    }
+    .legend-dot.urgent { background: #ef4444; }
+    .legend-dot.soon   { background: #f97316; }
+    .legend-dot.coming { background: #22c55e; }
+    .legend-dot.now    { background: #8b5cf6; }
+
+    /* ── Grid ──────────────────────────────────────────────────────────────── */
+    #arrivals-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 14px;
+    }
+
+    /* ── Card ──────────────────────────────────────────────────────────────── */
+    .arrival-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px 18px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      border-left: 5px solid #22c55e;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+      position: relative;
+    }
+    .arrival-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+    }
+    .arrival-card.arriving { border-left-color: #8b5cf6; }
+    .arrival-card.urgent   { border-left-color: #ef4444; }
+    .arrival-card.soon     { border-left-color: #f97316; }
+    .arrival-card.coming   { border-left-color: #22c55e; }
+
+    .card-route {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #718096;
+    }
+    .card-stop {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #2d3748;
+      line-height: 1.3;
+    }
+    .card-arrival {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      margin-top: 4px;
+    }
+    .minutes-number {
+      font-size: 2.4rem;
+      font-weight: 800;
+      line-height: 1;
+      color: #1a202c;
+      min-width: 56px;
+    }
+    .minutes-number.arriving-now {
+      font-size: 1.4rem;
+      color: #8b5cf6;
+    }
+    .minutes-label {
+      font-size: 0.88rem;
+      color: #718096;
+      line-height: 1.2;
+    }
+    .card-meta {
+      font-size: 0.75rem;
+      color: #a0aec0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin-top: 2px;
+    }
+
+    /* ── Empty / Loading / Error states ───────────────────────────────────── */
+    #placeholder {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 60px 20px;
+      color: #718096;
+    }
+    #placeholder .big-icon { font-size: 3rem; margin-bottom: 12px; }
+    #placeholder p { font-size: 0.95rem; }
+
+    /* ── "No arrivals" note ────────────────────────────────────────────────── */
+    .no-arrivals-note {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 40px;
+      color: #718096;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>
+    🚌 UNC Bus Arrivals
+  </h1>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div id="loading-spinner"></div>
+    <span id="last-updated">Loading...</span>
+  </div>
+</header>
+
+<div id="status-bar">
+  <div id="status-dot"></div>
+  <span id="status-text">Connecting to scraper...</span>
+</div>
+
+<main>
+  <div id="controls">
+    <label for="route-filter">Filter by route:</label>
+    <select id="route-filter">
+      <option value="">All Routes</option>
+    </select>
+    <span id="count-badge">— arrivals</span>
+  </div>
+
+  <div id="legend">
+    <div class="legend-item"><div class="legend-dot now"></div> Arriving now</div>
+    <div class="legend-item"><div class="legend-dot urgent"></div> Under 3 min</div>
+    <div class="legend-item"><div class="legend-dot soon"></div> 3 – 7 min</div>
+    <div class="legend-item"><div class="legend-dot coming"></div> 7+ min</div>
+  </div>
+
+  <div id="arrivals-grid">
+    <div id="placeholder">
+      <div class="big-icon">🔄</div>
+      <p>Scraper is starting up...<br>First run takes about 30–60 seconds.</p>
+    </div>
+  </div>
+</main>
+
+<script>
+  // ── State ───────────────────────────────────────────────────────────────────
+  let allArrivals = [];
+  const grid       = document.getElementById('arrivals-grid');
+  const filterEl   = document.getElementById('route-filter');
+  const countEl    = document.getElementById('count-badge');
+  const updatedEl  = document.getElementById('last-updated');
+  const statusDot  = document.getElementById('status-dot');
+  const statusText = document.getElementById('status-text');
+  const spinner    = document.getElementById('loading-spinner');
+
+  // ── Helpers ─────────────────────────────────────────────────────────────────
+  function esc(str) {
+    return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function urgencyClass(min) {
+    if (min === null || min === undefined) return 'coming';
+    const m = parseInt(min, 10);
+    if (isNaN(m) || m <= 0) return 'arriving';
+    if (m <= 2)             return 'urgent';
+    if (m <= 7)             return 'soon';
+    return 'coming';
+  }
+
+  function minutesDisplay(min) {
+    if (min === null || min === undefined) return { num: '?', label: 'min', cls: '' };
+    const m = parseInt(min, 10);
+    if (isNaN(m) || m <= 0) return { num: 'Now', label: 'Arriving', cls: 'arriving-now' };
+    return { num: m, label: m === 1 ? 'min away' : 'min away', cls: '' };
+  }
+
+  // ── Render cards ─────────────────────────────────────────────────────────────
+  function renderCards(list) {
+    if (list.length === 0) {
+      grid.innerHTML = '<div class="no-arrivals-note">No arrivals found for this selection.</div>';
+      return;
+    }
+
+    grid.innerHTML = list.map(a => {
+      const cls   = urgencyClass(a.minutesUntilArrival);
+      const disp  = minutesDisplay(a.minutesUntilArrival);
+      const sched = a.scheduledArriveTime ? `Scheduled: ${esc(a.scheduledArriveTime)}` : '';
+      return `
+        <div class="arrival-card ${cls}">
+          <div class="card-route">${esc(a.routeName)}</div>
+          <div class="card-stop">${esc(a.stopName)}</div>
+          <div class="card-arrival">
+            <span class="minutes-number ${disp.cls}">${esc(String(disp.num))}</span>
+            <span class="minutes-label">${esc(disp.label)}<br/><small>${esc(a.directionName)}</small></span>
+          </div>
+          <div class="card-meta">
+            <span>🚌 ${esc(a.busName || 'Bus')}</span>
+            ${sched ? `<span>🕐 ${sched}</span>` : ''}
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // ── Populate route filter ────────────────────────────────────────────────────
+  function populateFilter(arrivals) {
+    const routes = [...new Set(arrivals.map(a => a.routeName))].sort();
+    const current = filterEl.value;
+    filterEl.innerHTML = '<option value="">All Routes</option>' +
+      routes.map(r => `<option value="${esc(r)}">${esc(r)}</option>`).join('');
+    if (current && routes.includes(current)) filterEl.value = current;
+  }
+
+  // ── Apply current filter ─────────────────────────────────────────────────────
+  function applyFilter() {
+    const sel = filterEl.value;
+    const list = sel ? allArrivals.filter(a => a.routeName === sel) : allArrivals;
+    // Sort: soonest first, nulls last
+    list.sort((a, b) => {
+      const ma = a.minutesUntilArrival ?? 9999;
+      const mb = b.minutesUntilArrival ?? 9999;
+      return ma - mb;
+    });
+    countEl.textContent = `${list.length} arrival${list.length !== 1 ? 's' : ''}`;
+    renderCards(list);
+  }
+
+  filterEl.addEventListener('change', applyFilter);
+
+  // ── Fetch data from server ────────────────────────────────────────────────────
+  async function fetchArrivals() {
+    spinner.style.display = 'block';
+    try {
+      const res = await fetch('/api/arrivals');
+
+      if (res.status === 503) {
+        const body = await res.json();
+        setStatus('warn', body.message || 'Scraper starting up...');
+        updatedEl.textContent = 'Not yet available';
+        return;
+      }
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const data = await res.json();
+
+      allArrivals = data.arrivals || [];
+      populateFilter(allArrivals);
+      applyFilter();
+
+      const ts = data.lastUpdated
+        ? 'Updated ' + new Date(data.lastUpdated).toLocaleTimeString()
+        : 'Live';
+      updatedEl.textContent = ts;
+
+      if (allArrivals.length === 0) {
+        setStatus('warn', 'No live arrivals right now — buses may not be in service. Routes and stops are still being fetched correctly.');
+      } else {
+        setStatus('ok', `${allArrivals.length} arrival prediction${allArrivals.length !== 1 ? 's' : ''} — refreshing every 30s`);
+      }
+
+    } catch (err) {
+      console.error('Fetch error:', err);
+      setStatus('error', 'Cannot reach scraper server. Is it running?');
+      updatedEl.textContent = 'Connection error';
+    } finally {
+      spinner.style.display = 'none';
+    }
+  }
+
+  function setStatus(level, msg) {
+    statusDot.className = level === 'ok' ? '' : level;
+    statusText.textContent = msg;
+  }
+
+  // ── Boot ─────────────────────────────────────────────────────────────────────
+  fetchArrivals();
+  setInterval(fetchArrivals, 30_000);
+</script>
+</body>
+</html>
