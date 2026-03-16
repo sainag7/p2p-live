@@ -1,6 +1,13 @@
 import { Coordinate, Stop } from '../types';
 
 const WALKING_SPEED_MPS = 1.4; // Average walking speed ~1.4 m/s
+const METERS_PER_MILE = 1609.344;
+
+/** UNC Chapel Hill campus center (lat, lon) for service-area checks. */
+export const UNC_CAMPUS_CENTER: Coordinate = { lat: 35.9049, lon: -79.0469 };
+
+/** Service radius in miles: beyond this, show "outside area" notice. */
+export const SERVICE_RADIUS_MILES = 15;
 
 function toRad(value: number) {
   return (value * Math.PI) / 180;
@@ -23,6 +30,11 @@ export const getDistanceMeters = (c1: Coordinate, c2: Coordinate): number => {
 
   return R * c;
 };
+
+/** Distance between two points in miles (imperial). */
+export function getDistanceMiles(c1: Coordinate, c2: Coordinate): number {
+  return getDistanceMeters(c1, c2) / METERS_PER_MILE;
+}
 
 export const getWalkTimeMinutes = (distanceMeters: number): number => {
   return Math.ceil(distanceMeters / WALKING_SPEED_MPS / 60);

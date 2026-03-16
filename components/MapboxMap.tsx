@@ -17,6 +17,8 @@ import { API } from '../utils/api';
 type GeoJSONFC = { type: 'FeatureCollection'; features: Array<{ type: 'Feature'; geometry: { type: 'Point'; coordinates: number[] } | { type: 'LineString'; coordinates: [number, number][] }; properties: Record<string, unknown> }> };
 
 const CHAPEL_HILL: [number, number] = [-79.05, 35.9132];
+/** UNC campus center [lng, lat] for "Center Map on UNC" flyTo. */
+const UNC_CAMPUS_CENTER: [number, number] = [-79.0469, 35.9049];
 const DEFAULT_ZOOM = 13;
 const USER_ZOOM = 16;
 const PITCH_3D = 60;
@@ -306,6 +308,8 @@ export interface MapboxMapProps {
   enable3D?: boolean;
   onToggle3D?: () => void;
   onOpenRoutes?: () => void;
+  /** When set (e.g. timestamp), map flies to UNC campus center. */
+  centerOnCampusAt?: number | null;
   className?: string;
 }
 
@@ -322,6 +326,7 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
   enable3D = false,
   onToggle3D,
   onOpenRoutes,
+  centerOnCampusAt,
   className = '',
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -831,6 +836,18 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
       essential: true,
     });
   }, [mapReady, activeJourney]);
+
+  // Center map on UNC campus when requested (e.g. from "Center Map on UNC" button)
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReady || centerOnCampusAt == null) return;
+    map.flyTo({
+      center: UNC_CAMPUS_CENTER,
+      zoom: 14,
+      duration: 1200,
+      essential: true,
+    });
+  }, [mapReady, centerOnCampusAt]);
 
   // Fetch route polylines from server proxy (cached); store geometry for bus interpolation
   useEffect(() => {

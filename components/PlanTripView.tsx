@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
-import { Search, MapPin, ArrowRight, Bus, User, Navigation, History, X } from 'lucide-react';
+import { Search, MapPin, ArrowRight, Bus, User, Navigation, History, X, Pencil, ArrowUpDown } from 'lucide-react';
 import { Destination, Journey, Coordinate } from '../types';
 import { MOCK_DESTINATIONS } from '../data/mockTransit';
 import { POPULAR_LOCATIONS } from '../data/popularLocations';
@@ -17,6 +17,16 @@ const ALL_DESTINATIONS = (() => {
   [...TOP_DESTINATIONS, ...POPULAR_LOCATIONS, ...MOCK_DESTINATIONS].forEach((d) => byId.set(d.id, d));
   return Array.from(byId.values());
 })();
+
+/** Start or end of a trip: current location or a chosen place. */
+type TripEnd = 'current' | Destination;
+
+function tripEndToDestination(tripEnd: TripEnd, userLocation: Coordinate): Destination {
+  if (tripEnd === 'current') {
+    return { id: 'current', name: 'Current Location', lat: userLocation.lat, lon: userLocation.lon };
+  }
+  return tripEnd;
+}
 
 interface GeocodeResult {
   id: string;
@@ -40,6 +50,11 @@ export const PlanTripView: React.FC<PlanTripViewProps> = ({
 }) => {
   const [query, setQuery] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
+  const [fromLocation, setFromLocation] = useState<TripEnd>('current');
+  const [toDestination, setToDestination] = useState<Destination | null>(null);
+  const [expandedSearch, setExpandedSearch] = useState(false);
+  const [fromQuery, setFromQuery] = useState('');
+  const [fromSearchFocused, setFromSearchFocused] = useState(false);
   const [recentSearches, setRecentSearches] = useState<RecentSearchItem[]>(() => getRecentSearches());
   const [journey, setJourney] = useState<Journey | null>(existingJourney);
   const [routingLoading, setRoutingLoading] = useState(false);
@@ -48,6 +63,11 @@ export const PlanTripView: React.FC<PlanTripViewProps> = ({
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const blurTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dropdownScrollRef = useRef<HTMLDivElement>(null);
+
+  const origin: Coordinate = fromLocation === 'current'
+    ? userLocation
+    : { lat: fromLocation.lat, lon: fromLocation.lon };
+  const activeQuery = expandedSearch && fromSearchFocused ? fromQuery : query;
 
   const stopNameById = useMemo(() => {
     const m = new Map<string, string>();
@@ -58,16 +78,16 @@ export const PlanTripView: React.FC<PlanTripViewProps> = ({
   useEffect(() => () => { if (blurTimerRef.current) clearTimeout(blurTimerRef.current); }, []);
 
   const topLocationSuggestions = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const q = activeQuery.trim().toLowerCase();
     if (!q) return TOP_DESTINATIONS;
     return TOP_LOCATIONS.filter((loc) => {
       const fields = [loc.name, loc.address, ...loc.aliases];
       return fields.some((f) => f.toLowerCase().includes(q));
     }).map(topLocationToDestination);
-  }, [query]);
+  }, [activeQuery]);
 
   useEffect(() => {
-    const q = query.trim();
+    const q = activeQuery.trim();
     if (q.length < 3) {
       setAddressResults([]);
       setGeocodeLoading(false);
@@ -94,11 +114,18 @@ export const PlanTripView: React.FC<PlanTripViewProps> = ({
       controller.abort();
       clearTimeout(t);
     };
-  }, [query, userLocation.lon, userLocation.lat]);
+  }, [activeQuery, userLocation.lon, userLocation.lat]);
 
-  const showDropdownUnfocused = !searchFocused;
-  const showDropdownFocusedEmpty = searchFocused && query.trim().length === 0;
-  const showDropdownFocusedQuery = searchFocused && query.trim().length > 0;
+  const isFromActive = expandedSearch && fromSearchFocused;
+  const showDropdownUnfocused = !expandedSearch ? !searchFocused : false;
+  const showDropdownFocusedEmpty =
+    (expandedSearch && fromSearchFocused && fromQuery.trim().length === 0) ||
+    (expandedSearch && searchFocused && query.trim().length === 0) ||
+    (!expandedSearch && searchFocused && query.trim().length === 0);
+  const showDropdownFocusedQuery =
+    (expandedSearch && fromSearchFocused && fromQuery.trim().length > 0) ||
+    (expandedSearch && searchFocused && query.trim().length > 0) ||
+    (!expandedSearch && searchFocused && query.trim().length > 0);
 
   const refreshRecent = useCallback(() => {
     setRecentSearches(getRecentSearches());
@@ -107,13 +134,14 @@ export const PlanTripView: React.FC<PlanTripViewProps> = ({
   const handleSelectDestination = useCallback(
     async (dest: Destination) => {
       setQuery(dest.name);
+      setToDestination(dest);
       setSearchFocused(false);
       addRecentSearch({ label: dest.name, address: dest.address, lat: dest.lat, lon: dest.lon });
       refreshRecent();
       setRoutingLoading(true);
       try {
         const newJourney = await computeMultimodalRoute({
-          origin: userLocation,
+          origin,
           destination: dest,
         });
         setJourney(newJourney);
@@ -125,7 +153,7 @@ export const PlanTripView: React.FC<PlanTripViewProps> = ({
         setRoutingLoading(false);
       }
     },
-    [userLocation, onPlanRoute, refreshRecent]
+    [origin, onPlanRoute, refreshRecent]
   );
 
   const handleSelectAddressResult = useCallback(
@@ -155,13 +183,14 @@ export const PlanTripView: React.FC<PlanTripViewProps> = ({
               lon: -79.05,
             };
       setQuery(dest.name);
+      setToDestination(dest);
       setSearchFocused(false);
       addRecentSearch({ label: dest.name, address: item.address, lat: dest.lat, lon: dest.lon });
       refreshRecent();
       setRoutingLoading(true);
       try {
         const newJourney = await computeMultimodalRoute({
-          origin: userLocation,
+          origin,
           destination: dest,
         });
         setJourney(newJourney);
@@ -173,13 +202,94 @@ export const PlanTripView: React.FC<PlanTripViewProps> = ({
         setRoutingLoading(false);
       }
     },
-    [userLocation, onPlanRoute, refreshRecent]
+    [origin, onPlanRoute, refreshRecent]
   );
 
   const handleClearRecent = useCallback(() => {
     clearRecentSearches();
     setRecentSearches([]);
   }, []);
+
+  const handleSelectFrom = useCallback((dest: Destination) => {
+    setFromLocation(dest);
+    setFromQuery(dest.name);
+    setFromSearchFocused(false);
+    addRecentSearch({ label: dest.name, address: dest.address, lat: dest.lat, lon: dest.lon });
+    refreshRecent();
+  }, [refreshRecent]);
+
+  const handleSelectFromRecent = useCallback((item: RecentSearchItem) => {
+    const dest: Destination =
+      item.lat != null && item.lon != null
+        ? { id: `recent-${item.label}`, name: item.label, lat: item.lat, lon: item.lon }
+        : ALL_DESTINATIONS.find((d) => d.name.toLowerCase() === item.label.toLowerCase()) ?? {
+            id: `recent-${item.label}`,
+            name: item.label,
+            lat: 35.91,
+            lon: -79.05,
+          };
+    setFromLocation(dest);
+    setFromQuery(dest.name);
+    setFromSearchFocused(false);
+    addRecentSearch({ label: dest.name, address: item.address ?? dest.address, lat: dest.lat, lon: dest.lon });
+    refreshRecent();
+  }, [refreshRecent]);
+
+  const handleSelectFromAddressResult = useCallback(
+    (item: GeocodeResult) => {
+      const [lon, lat] = item.coordinates;
+      const dest: Destination = {
+        id: `addr-${item.id}`,
+        name: item.place_name,
+        lat,
+        lon,
+        address: item.place_name,
+      };
+      handleSelectFrom(dest);
+    },
+    [handleSelectFrom]
+  );
+
+  const handleUseCurrentLocation = useCallback(() => {
+    setFromLocation('current');
+    setFromQuery('');
+    setFromSearchFocused(false);
+  }, []);
+
+  const handleSwapFromTo = useCallback(() => {
+    if (toDestination == null) return;
+    setFromLocation(toDestination);
+    setToDestination(fromLocation === 'current' ? null : fromLocation);
+    setQuery(fromLocation === 'current' ? '' : fromLocation.name);
+    setFromQuery(toDestination.name);
+    setSearchFocused(false);
+    setFromSearchFocused(false);
+  }, [fromLocation, toDestination]);
+
+  const handleClearFrom = useCallback(() => {
+    setFromLocation('current');
+    setFromQuery('');
+  }, []);
+
+  const handleClearTo = useCallback(() => {
+    setToDestination(null);
+    setQuery('');
+  }, []);
+
+  const handlePlanTripFromExpanded = useCallback(async () => {
+    if (toDestination == null) return;
+    setRoutingLoading(true);
+    try {
+      const newJourney = await computeMultimodalRoute({ origin, destination: toDestination });
+      setJourney(newJourney);
+      onPlanRoute(newJourney);
+    } catch (e) {
+      console.error(e);
+      alert('Could not calculate route');
+    } finally {
+      setRoutingLoading(false);
+    }
+  }, [origin, toDestination, onPlanRoute]);
 
   type SelectableEntry =
     | { type: 'top'; dest: Destination }
@@ -217,11 +327,36 @@ export const PlanTripView: React.FC<PlanTripViewProps> = ({
     (el as HTMLElement)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }, [highlightedIndex, selectableItems.length]);
 
+  const runSelection = useCallback(
+    (entry: SelectableEntry) => {
+      if (entry.type === 'top') {
+        if (isFromActive) handleSelectFrom(entry.dest);
+        else handleSelectDestination(entry.dest);
+      } else if (entry.type === 'recent') {
+        if (isFromActive) handleSelectFromRecent(entry.item);
+        else handleSelectRecent(entry.item);
+      } else if (entry.type === 'address') {
+        if (isFromActive) handleSelectFromAddressResult(entry.item);
+        else handleSelectAddressResult(entry.item);
+      }
+    },
+    [
+      isFromActive,
+      handleSelectFrom,
+      handleSelectDestination,
+      handleSelectFromRecent,
+      handleSelectRecent,
+      handleSelectFromAddressResult,
+      handleSelectAddressResult,
+    ]
+  );
+
   const handleSearchKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === 'Escape') {
         (e.target as HTMLInputElement).blur();
         setSearchFocused(false);
+        if (expandedSearch) setFromSearchFocused(false);
         return;
       }
       if (selectableItems.length === 0) return;
@@ -239,12 +374,38 @@ export const PlanTripView: React.FC<PlanTripViewProps> = ({
         e.preventDefault();
         const entry = selectableItems[highlightedIndex];
         if (!entry) return;
-        if (entry.type === 'top') handleSelectDestination(entry.dest);
-        else if (entry.type === 'recent') handleSelectRecent(entry.item);
-        else if (entry.type === 'address') handleSelectAddressResult(entry.item);
+        runSelection(entry);
       }
     },
-    [selectableItems, highlightedIndex, handleSelectDestination, handleSelectRecent, handleSelectAddressResult]
+    [selectableItems, highlightedIndex, expandedSearch, runSelection]
+  );
+
+  const handleFromSearchKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        (e.target as HTMLInputElement).blur();
+        setFromSearchFocused(false);
+        return;
+      }
+      if (selectableItems.length === 0) return;
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setHighlightedIndex((prev) => (prev + 1) % selectableItems.length);
+        return;
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setHighlightedIndex((prev) => (prev - 1 + selectableItems.length) % selectableItems.length);
+        return;
+      }
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const entry = selectableItems[highlightedIndex];
+        if (!entry) return;
+        runSelection(entry);
+      }
+    },
+    [selectableItems, highlightedIndex, runSelection]
   );
 
   const handleNewSearch = () => {
@@ -282,9 +443,24 @@ export const PlanTripView: React.FC<PlanTripViewProps> = ({
     const nextBusInMin =
       nextBusAt != null ? Math.max(0, Math.round((nextBusAt.getTime() - now.getTime()) / 60000)) : null;
     return (
-      <div className="flex flex-col h-full bg-gray-50 overflow-hidden">
+      <div className="flex flex-col h-full bg-gray-50">
         {/* Journey Summary Header */}
         <div className="bg-white p-5 border-b border-gray-100 shadow-sm shrink-0">
+          {/* Destination summary */}
+          <div className="mb-4">
+            <h2 className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+              Destination
+            </h2>
+            <div className="text-base font-semibold text-gray-900">
+              {journey.destination.name}
+            </div>
+            {journey.destination.address && (
+              <div className="text-xs text-gray-500 mt-0.5">
+                {journey.destination.address}
+              </div>
+            )}
+          </div>
+          <div className="h-px bg-gray-100 -mx-5 mb-4" />
           <div className="flex flex-row flex-wrap items-start justify-between gap-4">
             {/* Left: Total time + summary */}
             <div className="flex-1 min-w-0">
@@ -443,7 +619,7 @@ export const PlanTripView: React.FC<PlanTripViewProps> = ({
         </div>
 
         {/* Steps List */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-6 pb-24">
+        <div className="p-4 space-y-6 pb-24">
            {journey.segments.map((seg, idx) => (
              <div key={idx} className="relative pl-8 group">
                 {/* Connector Line */}
@@ -547,7 +723,7 @@ export const PlanTripView: React.FC<PlanTripViewProps> = ({
                   type="button"
                   id={`dropdown-option-${i}`}
                   data-dropdown-index={i}
-                  onClick={() => handleSelectDestination(dest)}
+                  onClick={() => runSelection({ type: 'top', dest })}
                   onMouseEnter={() => setHighlightedIndex(i)}
                   className={`w-full px-3 py-2.5 rounded-lg text-left flex items-center gap-2 active:scale-[0.99] transition-transform ${highlightedIndex === i ? 'bg-p2p-blue/10' : 'hover:bg-gray-50'}`}
                 >
@@ -586,7 +762,7 @@ export const PlanTripView: React.FC<PlanTripViewProps> = ({
                       type="button"
                       id={`dropdown-option-${i}`}
                       data-dropdown-index={i}
-                      onClick={() => handleSelectRecent(item)}
+                      onClick={() => runSelection({ type: 'recent', item })}
                       onMouseEnter={() => setHighlightedIndex(i)}
                       className={`w-full px-3 py-2.5 rounded-lg flex items-center gap-3 text-left active:scale-[0.99] transition-transform ${highlightedIndex === i ? 'bg-p2p-blue/10' : 'hover:bg-gray-50'}`}
                     >
@@ -615,7 +791,7 @@ export const PlanTripView: React.FC<PlanTripViewProps> = ({
                       type="button"
                       id={`dropdown-option-${idx}`}
                       data-dropdown-index={idx}
-                      onClick={() => handleSelectDestination(dest)}
+                      onClick={() => runSelection({ type: 'top', dest })}
                       onMouseEnter={() => setHighlightedIndex(idx)}
                       className={`w-full px-3 py-2.5 rounded-lg text-left flex items-center gap-2 active:scale-[0.99] transition-transform ${highlightedIndex === idx ? 'bg-p2p-blue/10' : 'hover:bg-gray-50'}`}
                     >
@@ -645,7 +821,7 @@ export const PlanTripView: React.FC<PlanTripViewProps> = ({
                       type="button"
                       id={`dropdown-option-${i}`}
                       data-dropdown-index={i}
-                      onClick={() => handleSelectDestination(dest)}
+                      onClick={() => runSelection({ type: 'top', dest })}
                       onMouseEnter={() => setHighlightedIndex(i)}
                       className={`w-full px-3 py-2.5 rounded-lg text-left flex items-center gap-2 active:scale-[0.99] transition-transform ${highlightedIndex === i ? 'bg-p2p-blue/10' : 'hover:bg-gray-50'}`}
                     >
@@ -678,7 +854,7 @@ export const PlanTripView: React.FC<PlanTripViewProps> = ({
                       type="button"
                       id={`dropdown-option-${idx}`}
                       data-dropdown-index={idx}
-                      onClick={() => handleSelectAddressResult(item)}
+                      onClick={() => runSelection({ type: 'address', item })}
                       onMouseEnter={() => setHighlightedIndex(idx)}
                       className={`w-full px-3 py-2.5 rounded-lg text-left flex items-center gap-2 active:scale-[0.99] transition-transform ${highlightedIndex === idx ? 'bg-p2p-blue/10' : 'hover:bg-gray-50'}`}
                     >
@@ -693,7 +869,7 @@ export const PlanTripView: React.FC<PlanTripViewProps> = ({
                   );
                 })}
               </ul>
-            ) : !geocodeLoading && query.trim().length >= 3 && (
+            ) : !geocodeLoading && activeQuery.trim().length >= 3 && (
               <p className="text-sm text-gray-500 px-2">No address results.</p>
             )}
           </div>
@@ -707,32 +883,169 @@ export const PlanTripView: React.FC<PlanTripViewProps> = ({
       <div className="mb-2 mt-2">
         <h2 className="text-2xl font-black text-gray-900 mb-4">Plan Trip</h2>
 
-        {/* Search widget — own card; when focused, no bottom rounding so dropdown attaches */}
-        <div className={`bg-white shadow-sm border border-gray-200 overflow-visible ${showDropdownUnfocused ? 'rounded-xl' : 'rounded-t-xl border-b-0'}`}>
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10" size={20} aria-hidden />
-            <input
-              id="plan-trip-destination"
-              type="text"
-              autoComplete="off"
-              placeholder="Where do you want to go?"
-              aria-label="Destination search"
-              aria-expanded={searchFocused || showDropdownUnfocused}
-              aria-haspopup="listbox"
-              className="w-full bg-transparent pl-12 pr-4 py-4 text-lg font-medium focus:outline-none focus:ring-2 focus:ring-p2p-blue focus:ring-inset placeholder-gray-400 border-0 rounded-t-xl"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onFocus={() => { if (blurTimerRef.current) clearTimeout(blurTimerRef.current); blurTimerRef.current = null; setSearchFocused(true); }}
-              onBlur={() => { blurTimerRef.current = setTimeout(() => setSearchFocused(false), 200); }}
-              onKeyDown={handleSearchKeyDown}
-            />
-            {!showDropdownUnfocused && (
-              <div className="absolute top-full left-0 right-0 z-50 bg-white rounded-b-xl shadow-lg border border-t border-gray-200 overflow-hidden">
-                {dropdownContent}
+        {/* Search widget — compact (single To) or expanded (From + To) */}
+        {!expandedSearch ? (
+          <div className={`bg-white shadow-sm border border-gray-200 overflow-visible ${showDropdownUnfocused ? 'rounded-xl' : 'rounded-t-xl border-b-0'}`}>
+            {searchFocused && (
+              <div className="px-4 pt-3 pb-1 flex items-center justify-between gap-2">
+                <span className="text-sm text-gray-500">
+                  From: {fromLocation === 'current' ? 'Current Location' : fromLocation.name}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setExpandedSearch(true)}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium text-p2p-blue hover:bg-p2p-blue/10 transition-colors"
+                  aria-label="Change start location"
+                >
+                  <Pencil size={14} />
+                  Edit From
+                </button>
               </div>
             )}
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10" size={20} aria-hidden />
+              <input
+                id="plan-trip-destination"
+                type="text"
+                autoComplete="off"
+                placeholder="Where do you want to go?"
+                aria-label="Destination search"
+                aria-expanded={searchFocused || showDropdownUnfocused}
+                aria-haspopup="listbox"
+                className="w-full bg-transparent pl-12 pr-4 py-4 text-lg font-medium focus:outline-none focus:ring-2 focus:ring-p2p-blue focus:ring-inset placeholder-gray-400 border-0 rounded-t-xl"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onFocus={() => { if (blurTimerRef.current) clearTimeout(blurTimerRef.current); blurTimerRef.current = null; setSearchFocused(true); }}
+                onBlur={() => { blurTimerRef.current = setTimeout(() => setSearchFocused(false), 200); }}
+                onKeyDown={handleSearchKeyDown}
+              />
+              {!showDropdownUnfocused && (
+                <div className="absolute top-full left-0 right-0 z-50 bg-white rounded-b-xl shadow-lg border border-t border-gray-200 overflow-hidden">
+                  {dropdownContent}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className={`bg-white shadow-sm border border-gray-200 overflow-visible ${(fromSearchFocused || searchFocused) ? 'rounded-t-xl border-b-0' : 'rounded-xl'}`}>
+            <div className="p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold text-gray-700">Edit start & destination</span>
+                <button
+                  type="button"
+                  onClick={() => setExpandedSearch(false)}
+                  className="text-sm font-medium text-p2p-blue hover:underline"
+                >
+                  Done
+                </button>
+              </div>
+              {/* From */}
+              <div className="relative">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">From</label>
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10 mt-1" size={18} aria-hidden />
+                <input
+                  id="plan-trip-from"
+                  type="text"
+                  autoComplete="off"
+                  placeholder="Current Location"
+                  aria-label="Start location"
+                  aria-expanded={fromSearchFocused}
+                  aria-haspopup="listbox"
+                  className="w-full bg-gray-50 border border-gray-200 pl-10 pr-10 py-3 text-base font-medium focus:outline-none focus:ring-2 focus:ring-p2p-blue focus:ring-inset focus:border-p2p-blue rounded-xl placeholder-gray-400"
+                  value={fromSearchFocused ? fromQuery : (fromLocation === 'current' ? '' : fromLocation.name)}
+                  onChange={(e) => setFromQuery(e.target.value)}
+                  onFocus={() => { if (blurTimerRef.current) clearTimeout(blurTimerRef.current); blurTimerRef.current = null; setFromSearchFocused(true); setSearchFocused(false); setHighlightedIndex(0); }}
+                  onBlur={() => { blurTimerRef.current = setTimeout(() => setFromSearchFocused(false), 200); }}
+                  onKeyDown={handleFromSearchKeyDown}
+                />
+                {fromLocation !== 'current' && (
+                  <button
+                    type="button"
+                    onClick={handleClearFrom}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 mt-0.5 text-gray-400 hover:text-gray-600 p-1 rounded"
+                    aria-label="Clear start location"
+                  >
+                    <X size={18} />
+                  </button>
+                )}
+                {fromSearchFocused && (
+                  <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white rounded-b-xl shadow-lg border border-t-0 border-gray-200 overflow-hidden">
+                    {dropdownContent}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2 flex-wrap">
+                {fromLocation !== 'current' && (
+                  <button
+                    type="button"
+                    onClick={handleUseCurrentLocation}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium text-p2p-blue bg-p2p-blue/10 hover:bg-p2p-blue/20 transition-colors"
+                  >
+                    <Navigation size={14} />
+                    Use Current Location
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={handleSwapFromTo}
+                  disabled={toDestination == null}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:pointer-events-none transition-colors"
+                  aria-label="Swap From and To"
+                >
+                  <ArrowUpDown size={14} />
+                  Swap
+                </button>
+              </div>
+
+              {/* To */}
+              <div className="relative">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">To</label>
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10 mt-1" size={18} aria-hidden />
+                <input
+                  id="plan-trip-to"
+                  type="text"
+                  autoComplete="off"
+                  placeholder="Where do you want to go?"
+                  aria-label="Destination"
+                  aria-expanded={searchFocused}
+                  aria-haspopup="listbox"
+                  className="w-full bg-gray-50 border border-gray-200 pl-10 pr-10 py-3 text-base font-medium focus:outline-none focus:ring-2 focus:ring-p2p-blue focus:ring-inset focus:border-p2p-blue rounded-xl placeholder-gray-400"
+                  value={searchFocused ? query : (toDestination?.name ?? '')}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onFocus={() => { if (blurTimerRef.current) clearTimeout(blurTimerRef.current); blurTimerRef.current = null; setSearchFocused(true); setFromSearchFocused(false); setHighlightedIndex(0); }}
+                  onBlur={() => { blurTimerRef.current = setTimeout(() => setSearchFocused(false), 200); }}
+                  onKeyDown={handleSearchKeyDown}
+                />
+                {toDestination != null && (
+                  <button
+                    type="button"
+                    onClick={handleClearTo}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 mt-0.5 text-gray-400 hover:text-gray-600 p-1 rounded"
+                    aria-label="Clear destination"
+                  >
+                    <X size={18} />
+                  </button>
+                )}
+                {searchFocused && (
+                  <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white rounded-b-xl shadow-lg border border-t-0 border-gray-200 overflow-hidden">
+                    {dropdownContent}
+                  </div>
+                )}
+              </div>
+
+              {toDestination != null && (
+                <button
+                  type="button"
+                  onClick={handlePlanTripFromExpanded}
+                  className="w-full py-3 px-4 bg-p2p-blue text-white font-bold text-base rounded-xl hover:bg-p2p-blue/90 transition-colors"
+                >
+                  Plan trip
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Top Destinations widget — separate card when dropdown is closed */}
         {showDropdownUnfocused && (
@@ -746,7 +1059,7 @@ export const PlanTripView: React.FC<PlanTripViewProps> = ({
                       type="button"
                       id={`dropdown-option-${i}`}
                       data-dropdown-index={i}
-                      onClick={() => handleSelectDestination(dest)}
+                      onClick={() => runSelection({ type: 'top', dest })}
                       onMouseEnter={() => setHighlightedIndex(i)}
                       className={`w-full px-3 py-2.5 rounded-lg text-left flex items-center gap-2 active:scale-[0.99] transition-transform ${highlightedIndex === i ? 'bg-p2p-blue/10' : 'hover:bg-gray-50'}`}
                     >

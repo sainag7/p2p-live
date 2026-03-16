@@ -19,6 +19,8 @@ interface MapViewProps {
   onStartWalkToStop?: (journey: Journey) => void;
   userLocationResolved?: boolean;
   onViewList?: () => void;
+  /** When set (e.g. timestamp), map flies to UNC campus center. */
+  centerOnCampusAt?: number | null;
 }
 
 export const MapView: React.FC<MapViewProps> = ({
@@ -34,6 +36,7 @@ export const MapView: React.FC<MapViewProps> = ({
   onStartWalkToStop,
   userLocationResolved = true,
   onViewList,
+  centerOnCampusAt,
 }) => {
   const [enable3D, setEnable3D] = useState(false);
 
@@ -52,6 +55,7 @@ export const MapView: React.FC<MapViewProps> = ({
         enable3D={enable3D}
         onToggle3D={() => setEnable3D((v) => !v)}
         onOpenRoutes={() => window.open(UNC_P2P_ROUTES_PDF_URL, '_blank', 'noopener,noreferrer')}
+        centerOnCampusAt={centerOnCampusAt}
         className="w-full h-full"
       />
 
