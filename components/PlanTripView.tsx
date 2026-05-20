@@ -7,7 +7,7 @@ import { TOP_LOCATIONS, topLocationToDestination } from '../data/topLocations';
 import { getRecentSearches, addRecentSearch, clearRecentSearches, type RecentSearchItem } from '../storage/recentSearches';
 import { computeMultimodalRoute } from '../utils/multimodalRouting';
 import { formatDuration, formatDistanceImperial, formatETA } from '../utils/format';
-import { ROUTE_CONFIGS } from '../data/routeConfig';
+import type { RouteConfig } from '../data/routeConfig';
 import { API } from '../utils/api';
 
 const TOP_DESTINATIONS: Destination[] = TOP_LOCATIONS.map(topLocationToDestination);
@@ -40,13 +40,15 @@ interface PlanTripViewProps {
   onPlanRoute: (journey: Journey) => void;
   onViewOnMap: () => void;
   existingJourney: Journey | null;
+  routeConfigs: RouteConfig[];
 }
 
-export const PlanTripView: React.FC<PlanTripViewProps> = ({ 
-  userLocation, 
-  onPlanRoute, 
+export const PlanTripView: React.FC<PlanTripViewProps> = ({
+  userLocation,
+  onPlanRoute,
   onViewOnMap,
-  existingJourney 
+  existingJourney,
+  routeConfigs,
 }) => {
   const [query, setQuery] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
@@ -71,9 +73,9 @@ export const PlanTripView: React.FC<PlanTripViewProps> = ({
 
   const stopNameById = useMemo(() => {
     const m = new Map<string, string>();
-    ROUTE_CONFIGS.forEach((r) => r.stops.forEach((s) => m.set(s.id, s.name)));
+    routeConfigs.forEach((r) => r.stops.forEach((s) => m.set(s.id, s.name)));
     return m;
-  }, []);
+  }, [routeConfigs]);
 
   useEffect(() => () => { if (blurTimerRef.current) clearTimeout(blurTimerRef.current); }, []);
 
@@ -140,10 +142,10 @@ export const PlanTripView: React.FC<PlanTripViewProps> = ({
       refreshRecent();
       setRoutingLoading(true);
       try {
-        const newJourney = await computeMultimodalRoute({
-          origin,
-          destination: dest,
-        });
+        const newJourney = await computeMultimodalRoute(
+          { origin, destination: dest },
+          routeConfigs
+        );
         setJourney(newJourney);
         onPlanRoute(newJourney);
       } catch (e) {
@@ -153,7 +155,7 @@ export const PlanTripView: React.FC<PlanTripViewProps> = ({
         setRoutingLoading(false);
       }
     },
-    [origin, onPlanRoute, refreshRecent]
+    [origin, onPlanRoute, refreshRecent, routeConfigs]
   );
 
   const handleSelectAddressResult = useCallback(
@@ -189,10 +191,10 @@ export const PlanTripView: React.FC<PlanTripViewProps> = ({
       refreshRecent();
       setRoutingLoading(true);
       try {
-        const newJourney = await computeMultimodalRoute({
-          origin,
-          destination: dest,
-        });
+        const newJourney = await computeMultimodalRoute(
+          { origin, destination: dest },
+          routeConfigs
+        );
         setJourney(newJourney);
         onPlanRoute(newJourney);
       } catch (e) {
@@ -202,7 +204,7 @@ export const PlanTripView: React.FC<PlanTripViewProps> = ({
         setRoutingLoading(false);
       }
     },
-    [origin, onPlanRoute, refreshRecent]
+    [origin, onPlanRoute, refreshRecent, routeConfigs]
   );
 
   const handleClearRecent = useCallback(() => {
@@ -280,7 +282,10 @@ export const PlanTripView: React.FC<PlanTripViewProps> = ({
     if (toDestination == null) return;
     setRoutingLoading(true);
     try {
-      const newJourney = await computeMultimodalRoute({ origin, destination: toDestination });
+      const newJourney = await computeMultimodalRoute(
+        { origin, destination: toDestination },
+        routeConfigs
+      );
       setJourney(newJourney);
       onPlanRoute(newJourney);
     } catch (e) {
@@ -289,7 +294,7 @@ export const PlanTripView: React.FC<PlanTripViewProps> = ({
     } finally {
       setRoutingLoading(false);
     }
-  }, [origin, toDestination, onPlanRoute]);
+  }, [origin, toDestination, onPlanRoute, routeConfigs]);
 
   type SelectableEntry =
     | { type: 'top'; dest: Destination }

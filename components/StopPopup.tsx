@@ -6,7 +6,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { X, Navigation, List } from 'lucide-react';
 import type { Stop, Coordinate, Journey } from '../types';
-import { getRoutesServedForStop } from '../data/p2pStops';
+import { getRoutesServedForStop, getRoutesServedForStopId } from '../data/p2pStops';
+import type { RouteConfig } from '../data/routeConfig';
 import { getWalkDirections } from '../utils/multimodalRouting';
 import { getDistanceMeters, getWalkTimeMinutes } from '../utils/geo';
 import { API } from '../utils/api';
@@ -35,6 +36,7 @@ interface StopPopupProps {
   stop: Stop;
   userLocation: Coordinate | null;
   userLocationResolved: boolean;
+  routeConfigs: RouteConfig[];
   onClose: () => void;
   onWalkToStop: (journey: Journey) => void;
   onViewOnList?: () => void;
@@ -44,6 +46,7 @@ export function StopPopup({
   stop,
   userLocation,
   userLocationResolved,
+  routeConfigs,
   onClose,
   onWalkToStop,
   onViewOnList,
@@ -54,7 +57,10 @@ export function StopPopup({
   const [walkLoading, setWalkLoading] = useState(false);
   const [walkError, setWalkError] = useState<string | null>(null);
 
-  const routesServed = getRoutesServedForStop(stop);
+  const routesServedById = getRoutesServedForStopId(stop.id, routeConfigs);
+  const routesServed = routesServedById.length > 0
+    ? routesServedById
+    : getRoutesServedForStop(stop);
 
   useEffect(() => {
     let cancelled = false;

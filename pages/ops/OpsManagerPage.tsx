@@ -34,7 +34,7 @@ import { getRosterName, getRosterAvatar } from '../../data/opsRoster';
 import { ComplaintsSummaryCard } from '../../components/ops/ComplaintsSummaryCard';
 import { Avatar } from '../../components/ops/Avatar';
 import { Bus, Users, TrendingUp, AlertCircle, MapPin, Download } from 'lucide-react';
-import { VEHICLES } from '../../data/mockTransit';
+import { useTransitData } from '../../hooks/useTransitData';
 import { formatShiftDuration } from '../../utils/format';
 import {
   ensureSeededTimesheetsAndSchedule,
@@ -45,6 +45,7 @@ import {
 } from '../../storage/timesheetsSeed';
 
 export function OpsManagerPage() {
+  const { vehicles } = useTransitData();
   const [activeTab, setActiveTab] = useState<OpsTabId>('dashboard');
   const [complaintStates, setComplaintStates] = useState(() => getComplaintStates());
   const [flaggedNotes, setFlaggedNotes] = useState<Record<string, boolean>>({});
@@ -246,9 +247,13 @@ export function OpsManagerPage() {
                   </div>
                   <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
                     <ul className="text-sm text-gray-600 space-y-1">
-                      {VEHICLES.slice(0, 4).map((v) => (
-                        <li key={v.id}>{v.id} · {v.routeName}</li>
-                      ))}
+                      {vehicles.length === 0 ? (
+                        <li className="text-gray-400 italic">No active buses reporting.</li>
+                      ) : (
+                        vehicles.slice(0, 4).map((v) => (
+                          <li key={v.id}>{v.id} · {v.routeName}</li>
+                        ))
+                      )}
                     </ul>
                   </div>
                 </div>

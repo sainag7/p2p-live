@@ -74,14 +74,15 @@ async function timeFetch(url: string, init?: RequestInit, samples = 3): Promise<
   return { avg: avg != null ? Math.round(avg) : null, p95: p95 != null ? Math.round(p95) : null };
 }
 
-function toRouteIdFromVehicleRouteId(routeId: string): RouteId | null {
-  if (routeId === 'p2p-express') return 'P2P_EXPRESS';
-  if (routeId === 'baity-hill') return 'BAITY_HILL';
+function toRouteIdFromVehicle(vehicle: Vehicle): RouteId | null {
+  const name = (vehicle.routeName || '').toLowerCase();
+  if (name.includes('express')) return 'P2P_EXPRESS';
+  if (name.includes('baity')) return 'BAITY_HILL';
   return null;
 }
 
 function mockFullnessPercent(vehicle: Vehicle): number {
-  const key = `${vehicle.id}-${vehicle.nextStopEtaMin}`;
+  const key = `${vehicle.id}-${vehicle.routeId}`;
   let hash = 0;
   for (let i = 0; i < key.length; i++) {
     hash = (hash * 31 + key.charCodeAt(i)) | 0;
@@ -165,7 +166,7 @@ export async function computeAdminMetrics(input: {
   const fullnessBuckets: Record<RouteId, number[]> = { P2P_EXPRESS: [], BAITY_HILL: [] };
 
   vehicles.forEach((v) => {
-    const rid = toRouteIdFromVehicleRouteId(v.routeId);
+    const rid = toRouteIdFromVehicle(v);
     if (!rid) return;
     activeBusCounts[rid] += 1;
     fullnessBuckets[rid].push(mockFullnessPercent(v));

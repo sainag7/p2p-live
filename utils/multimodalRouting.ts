@@ -6,7 +6,7 @@
 import type { Coordinate, Destination, Journey, JourneySegment, WalkingStep } from '../types';
 import type { LineStringGeometry } from '../types';
 import { findKNearestStops } from './geo';
-import { ROUTE_CONFIGS, type RouteConfig, type RouteStopConfig } from '../data/routeConfig';
+import { type RouteConfig, type RouteStopConfig } from '../data/routeConfig';
 import { createRouteInterpolator, haversineMeters, projectPointToRoute, sliceRouteByDistance } from './routeInterpolation';
 import type { LngLat } from './routeInterpolation';
 
@@ -44,14 +44,22 @@ export async function getWalkDirections(from: Coordinate, to: Coordinate): Promi
   }
 }
 
-export async function getRouteGeometry(routeId: string): Promise<LngLat[] | null> {
+export async function getRouteGeometry(
+  routeId: string,
+  coords?: [number, number][]
+): Promise<LngLat[] | null> {
   try {
-    const res = await fetch(`${BASE}/api/mapbox/route?routeId=${routeId}`);
+    const useCoords = Array.isArray(coords) && coords.length >= 2;
+    const res = await fetch(`${BASE}/api/mapbox/route`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(useCoords ? { routeId, coords } : { routeId }),
+    });
     if (!res.ok) return null;
     const data = await res.json();
-    const coords = data.geometry?.coordinates;
-    if (!Array.isArray(coords) || coords.length < 2) return null;
-    return coords;
+    const out = data.geometry?.coordinates;
+    if (!Array.isArray(out) || out.length < 2) return null;
+    return out;
   } catch {
     return null;
   }
@@ -121,11 +129,12 @@ export interface MultimodalInput {
   destination: Destination;
 }
 
-export async function computeMultimodalRoute(input: MultimodalInput): Promise<Journey> {
+export async function computeMultimodalRoute(
+  input: MultimodalInput,
+  routeConfigs: RouteConfig[]
+): Promise<Journey> {
   const { origin, destination } = input;
   const destCoord: Coordinate = { lat: destination.lat, lon: destination.lon };
-  const originLngLat: LngLat = [origin.lon, origin.lat];
-  const destLngLat: LngLat = [destination.lon, destination.lat];
 
   const now = new Date();
 
@@ -134,8 +143,9 @@ export async function computeMultimodalRoute(input: MultimodalInput): Promise<Jo
   const walkOnlyDurationMin = Math.ceil(walkOnlyDurationSec / 60);
 
   const routeGeometries: Record<string, LngLat[]> = {};
-  for (const config of ROUTE_CONFIGS) {
-    const geom = await getRouteGeometry(config.routeId);
+  for (const config of routeConfigs) {
+    const coords = config.stops.map((s) => s.coord);
+    const geom = await getRouteGeometry(config.routeId, coords);
     if (geom) routeGeometries[config.routeId] = geom;
   }
 
@@ -160,7 +170,7 @@ export async function computeMultimodalRoute(input: MultimodalInput): Promise<Jo
     ];
   }
 
-  for (const config of ROUTE_CONFIGS) {
+  for (const config of routeConfigs) {
     const routeCoords = routeGeometries[config.routeId];
     if (!routeCoords) continue;
 

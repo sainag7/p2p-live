@@ -16,21 +16,26 @@ export interface Route {
   color: string;
 }
 
-export interface UpcomingStop {
-  stopId: string;
-  etaMin: number;
-}
-
 export interface Vehicle {
   id: string;
+  name?: string;
   routeId: string;
   routeName: string;
   lat: number;
   lon: number;
   heading: number;
-  nextStopId: string;
-  nextStopEtaMin: number;
-  upcomingStops: UpcomingStop[];
+  speed?: number;
+  passengerLoad?: number;
+  capacity?: number;
+}
+
+export interface Arrival {
+  stopId: string;
+  routeId: string;
+  routeName: string;
+  vehicleId: string;
+  predictedArrivalTime: string;
+  minutesUntilArrival: number;
 }
 
 export interface Destination {

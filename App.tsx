@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { ViewState, Vehicle, Stop, Coordinate, Journey } from './types';
-import { STOPS, VEHICLES } from './data/mockTransit';
 import { findNearestStop, getDistanceMiles, UNC_CAMPUS_CENTER, SERVICE_RADIUS_MILES } from './utils/geo';
+import { useTransitData } from './hooks/useTransitData';
 import { BottomNav } from './components/BottomNav';
 import { ClosestStopCard } from './components/ClosestStopCard';
 import { BusList } from './components/BusList';
@@ -9,7 +9,7 @@ import { BusDetailSheet } from './components/BusDetailSheet';
 import { MapView } from './components/MapView';
 import { PlanTripView } from './components/PlanTripView';
 import { AppHeader } from './components/AppHeader';
-import { RefreshCw, X } from 'lucide-react';
+import { RefreshCw, X, AlertTriangle } from 'lucide-react';
 
 // Default to UNC Student Union if geo denied
 const DEFAULT_LOCATION: Coordinate = { lat: 35.9105, lon: -79.0478 };
@@ -26,9 +26,17 @@ function App() {
   const [warningDismissed, setWarningDismissed] = useState(false);
   const [centerOnCampusAt, setCenterOnCampusAt] = useState<number | null>(null);
   const computedOutsideAreaRef = useRef(false);
-  const [vehicles, setVehicles] = useState<Vehicle[]>(VEHICLES);
+  const {
+    vehicles,
+    stops,
+    routeConfigs,
+    loading: transitLoading,
+    error: transitError,
+    lastUpdated,
+    refresh: refreshTransit,
+  } = useTransitData();
   const [refreshLoading, setRefreshLoading] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState<number | null>(null);
+  const [errorBannerDismissed, setErrorBannerDismissed] = useState(false);
 
   // Geolocation Setup
   useEffect(() => {
@@ -76,7 +84,7 @@ function App() {
   }, [loadingLoc, geoResolved, userLocation]);
 
   // Derived State
-  const closestStop = useMemo(() => findNearestStop(userLocation, STOPS), [userLocation]);
+  const closestStop = useMemo(() => findNearestStop(userLocation, stops), [userLocation, stops]);
 
   const handlePlanRoute = (journey: Journey) => {
     setActiveJourney(journey);
@@ -89,14 +97,17 @@ function App() {
   const handleRefreshEtas = useCallback(async () => {
     setRefreshLoading(true);
     try {
-      // TODO: replace with real API when available, e.g. fetch('/api/vehicles/etas')
-      await new Promise((r) => setTimeout(r, 800));
-      setVehicles((prev) => [...prev]);
-      setLastUpdated(Date.now());
+      await refreshTransit();
+      setErrorBannerDismissed(false);
     } finally {
       setRefreshLoading(false);
     }
-  }, []);
+  }, [refreshTransit]);
+
+  // Reset the dismissal whenever a new error appears so the banner re-shows.
+  useEffect(() => {
+    if (transitError) setErrorBannerDismissed(false);
+  }, [transitError]);
 
   const dismissDistanceWarning = useCallback(() => {
     setWarningDismissed(true);
@@ -115,6 +126,33 @@ function App() {
 
       {/* Main Content Area: flex-1 min-h-0 so list can scroll */}
       <main className="flex-1 min-h-0 flex flex-col relative">
+        {/* Live transit data failure banner */}
+        {transitError && !errorBannerDismissed && (
+          <div className="pointer-events-none absolute inset-x-0 top-2 z-40 flex justify-center px-4">
+            <div className="pointer-events-auto w-full max-w-md rounded-xl border border-red-200 bg-red-50 px-4 py-3 shadow-sm relative">
+              <button
+                type="button"
+                onClick={() => setErrorBannerDismissed(true)}
+                className="absolute right-2 top-2 inline-flex items-center justify-center rounded-full p-1.5 text-red-700 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-400"
+                aria-label="Dismiss live data warning"
+              >
+                <X size={14} />
+              </button>
+              <div className="flex items-start gap-2 pr-6">
+                <AlertTriangle size={16} className="mt-0.5 shrink-0 text-red-600" />
+                <div>
+                  <p className="text-sm font-semibold text-red-900">Live tracking unavailable</p>
+                  <p className="text-xs text-red-800/90 mt-0.5">
+                    {vehicles.length > 0
+                      ? 'Showing the last known positions; pull refresh to retry.'
+                      : 'Could not reach the shuttle service. Pull refresh to retry.'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Outside service area notice (informational only) */}
         {outsideAreaMiles != null && outsideAreaMiles > SERVICE_RADIUS_MILES && !warningDismissed && (
           <div className="pointer-events-none absolute inset-x-0 top-2 z-30 flex justify-center px-4">
@@ -159,10 +197,9 @@ function App() {
             {closestStop && (
               <div className="px-4 pt-4 pb-2">
                 <h2 className="text-gray-900 font-bold text-lg mb-1">Closest Stop to You</h2>
-                <ClosestStopCard 
-                  stop={closestStop} 
-                  userLocation={userLocation} 
-                  vehicles={vehicles}
+                <ClosestStopCard
+                  stop={closestStop}
+                  userLocation={userLocation}
                 />
               </div>
             )}
@@ -187,9 +224,9 @@ function App() {
                 Refresh
               </button>
             </div>
-            <BusList 
-              vehicles={vehicles} 
-              stops={STOPS} 
+            <BusList
+              vehicles={vehicles}
+              stops={stops}
               onSelectBus={(bus) => setSelectedBus(bus)}
             />
           </div>
@@ -200,20 +237,22 @@ function App() {
             className="flex-1 min-h-0 overflow-y-auto no-scrollbar pb-20"
             style={{ WebkitOverflowScrolling: 'touch' }}
           >
-            <PlanTripView 
+            <PlanTripView
               userLocation={userLocation}
               onPlanRoute={handlePlanRoute}
               onViewOnMap={handleViewOnMap}
               existingJourney={activeJourney}
+              routeConfigs={routeConfigs}
             />
           </div>
         )}
         
         {view === 'map' && (
           <div className="h-full w-full relative">
-            <MapView 
-              stops={STOPS}
+            <MapView
+              stops={stops}
               vehicles={vehicles}
+              routeConfigs={routeConfigs}
               userLocation={userLocation}
               userLocationResolved={!loadingLoc}
               centerOnCampusAt={centerOnCampusAt}
@@ -236,11 +275,11 @@ function App() {
       </main>
 
       {/* Shared Overlays */}
-      <BusDetailSheet 
-        vehicle={selectedBus} 
-        stops={STOPS}
+      <BusDetailSheet
+        vehicle={selectedBus}
+        stops={stops}
         userLocation={userLocation}
-        onClose={() => setSelectedBus(null)} 
+        onClose={() => setSelectedBus(null)}
       />
 
       <BottomNav currentView={view} onChangeView={setView} />

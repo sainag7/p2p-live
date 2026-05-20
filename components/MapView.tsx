@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { MapboxMap } from './MapboxMap';
 import { StopPopup } from './StopPopup';
 import { Stop, Vehicle, Coordinate, Journey } from '../types';
+import type { RouteConfig } from '../data/routeConfig';
 import { X, Box, ExternalLink } from 'lucide-react';
 
 const UNC_P2P_ROUTES_PDF_URL = 'https://move.unc.edu/wp-content/uploads/sites/248/2022/08/unc-point-to-point-map.pdf';
@@ -9,6 +10,7 @@ const UNC_P2P_ROUTES_PDF_URL = 'https://move.unc.edu/wp-content/uploads/sites/24
 interface MapViewProps {
   stops: Stop[];
   vehicles: Vehicle[];
+  routeConfigs: RouteConfig[];
   userLocation: Coordinate;
   onSelectBus: (bus: Vehicle) => void;
   onSelectStop: (stop: Stop) => void;
@@ -26,6 +28,7 @@ interface MapViewProps {
 export const MapView: React.FC<MapViewProps> = ({
   stops,
   vehicles,
+  routeConfigs,
   userLocation,
   onSelectBus,
   onSelectStop,
@@ -45,6 +48,7 @@ export const MapView: React.FC<MapViewProps> = ({
       <MapboxMap
         stops={stops}
         vehicles={vehicles}
+        routeConfigs={routeConfigs}
         userLocation={userLocation}
         userLocationResolved={userLocationResolved}
         selectedStopId={selectedStop?.id ?? null}
@@ -124,6 +128,7 @@ export const MapView: React.FC<MapViewProps> = ({
               stop={selectedStop}
               userLocation={userLocation}
               userLocationResolved={userLocationResolved}
+              routeConfigs={routeConfigs}
               onClose={onDismissStop}
               onWalkToStop={(journey) => {
                 onStartWalkToStop?.(journey);

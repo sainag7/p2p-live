@@ -1,73 +1,8 @@
-import { Route, Vehicle, Destination } from '../types';
-import { STOPS } from './p2pStops';
+import { Route, Destination } from '../types';
 
-export { STOPS };
 export const ROUTES: Route[] = [
   { id: 'p2p-express', name: 'P2P Express', color: '#418FC5' },
   { id: 'baity-hill', name: 'Baity Hill', color: '#C33934' },
-];
-
-export const VEHICLES: Vehicle[] = [
-  {
-    id: 'bus-101',
-    routeId: 'p2p-express',
-    routeName: 'P2P Express',
-    lat: 35.9110,
-    lon: -79.0485,
-    heading: 90,
-    nextStopId: 'p2p-express-9',
-    nextStopEtaMin: 2,
-    upcomingStops: [
-      { stopId: 'p2p-express-9', etaMin: 2 },
-      { stopId: 'p2p-express-10', etaMin: 5 },
-      { stopId: 'p2p-express-15', etaMin: 12 },
-    ]
-  },
-  {
-    id: 'bus-201',
-    routeId: 'baity-hill',
-    routeName: 'Baity Hill',
-    lat: 35.9010,
-    lon: -79.0420,
-    heading: 180,
-    nextStopId: 'baity-hill-1',
-    nextStopEtaMin: 1,
-    upcomingStops: [
-      { stopId: 'baity-hill-1', etaMin: 1 },
-      { stopId: 'baity-hill-2', etaMin: 4 },
-      { stopId: 'baity-hill-5', etaMin: 9 },
-    ]
-  },
-  {
-    id: 'bus-102',
-    routeId: 'p2p-express',
-    routeName: 'P2P Express',
-    lat: 35.9040,
-    lon: -79.0460,
-    heading: 0,
-    nextStopId: 'p2p-express-6',
-    nextStopEtaMin: 3,
-    upcomingStops: [
-      { stopId: 'p2p-express-6', etaMin: 3 },
-      { stopId: 'p2p-express-20', etaMin: 6 },
-      { stopId: 'p2p-express-9', etaMin: 10 },
-    ]
-  },
-  {
-    id: 'bus-202',
-    routeId: 'baity-hill',
-    routeName: 'Baity Hill',
-    lat: 35.9023,
-    lon: -79.0548,
-    heading: 180,
-    nextStopId: 'baity-hill-1',
-    nextStopEtaMin: 1,
-    upcomingStops: [
-      { stopId: 'baity-hill-1', etaMin: 4 },
-      { stopId: 'baity-hill-2', etaMin: 9 },
-      { stopId: 'baity-hill-5', etaMin: 11 },
-    ]
-  },
 ];
 
 export const MOCK_DESTINATIONS: Destination[] = [

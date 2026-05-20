@@ -90,3 +90,40 @@ export function getRoutesServedForStop(stop: { lat: number; lon: number }): stri
   }
   return Array.from(names);
 }
+
+/**
+ * Return route display names that serve this stop id, using the runtime
+ * route configs. Pass `routeConfigs` from the useTransitData hook.
+ */
+export function getRoutesServedForStopId(
+  stopId: string,
+  routeConfigs: { routeId: RouteId; stops: { id: string }[] }[]
+): string[] {
+  const names = new Set<string>();
+  for (const cfg of routeConfigs) {
+    if (cfg.stops.some((s) => s.id === stopId)) {
+      names.add(ROUTE_DISPLAY_NAMES[cfg.routeId]);
+    }
+  }
+  return Array.from(names);
+}
+
+/** Display names per internal route id. Exposed for builders. */
+export const ROUTE_NAMES_BY_ID: Record<RouteId, string> = ROUTE_DISPLAY_NAMES;
+
+/**
+ * Known name mismatches between Syncromatics stop names and our hardcoded ones.
+ * Keys and values must be normalized via `normalizeStopName`. Empty for now;
+ * populate as real mismatches surface in dev logs.
+ */
+export const STOP_NAME_ALIASES: Record<string, string> = {};
+
+/** Lowercase, strip parentheticals, strip punctuation, collapse whitespace. */
+export function normalizeStopName(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/\([^)]*\)/g, ' ')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}

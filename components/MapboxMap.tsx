@@ -9,8 +9,9 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
 import type { Map as MapboxMapType, GeoJSONSource } from 'mapbox-gl';
 import { Stop, Vehicle, Coordinate, Journey } from '../types';
-import { P2P_EXPRESS_STOPS, BAITY_HILL_STOPS } from '../data/p2pStops';
+import type { RouteConfig } from '../data/routeConfig';
 import { createRouteInterpolator, type LngLat } from '../utils/routeInterpolation';
+import { syncroRouteIdToInternal } from '../utils/syncromatics';
 import { Navigation, Box, ExternalLink } from 'lucide-react';
 import { API } from '../utils/api';
 
@@ -298,6 +299,7 @@ function journeyStopsToGeoJSON(j: Journey | null): GeoJSONFC {
 export interface MapboxMapProps {
   stops: Stop[];
   vehicles: Vehicle[];
+  routeConfigs: RouteConfig[];
   userLocation: Coordinate | null;
   userLocationResolved?: boolean;
   selectedStopId: string | null;
@@ -316,6 +318,7 @@ export interface MapboxMapProps {
 export const MapboxMap: React.FC<MapboxMapProps> = ({
   stops,
   vehicles,
+  routeConfigs,
   userLocation,
   userLocationResolved = false,
   selectedStopId,
@@ -343,6 +346,10 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
     P2P_EXPRESS: ReturnType<typeof createRouteInterpolator> | null;
     BAITY_HILL: ReturnType<typeof createRouteInterpolator> | null;
   }>({ P2P_EXPRESS: null, BAITY_HILL: null });
+  const routeGeomFetchedHashRef = useRef<{ P2P_EXPRESS: string | null; BAITY_HILL: string | null }>({
+    P2P_EXPRESS: null,
+    BAITY_HILL: null,
+  });
   const busDistMetersRef = useRef<Record<string, number>>({});
   const lastTickRef = useRef<number>(0);
   const enabledBusRoutesRef = useRef({ showExpress: true, showBaity: true });
@@ -778,8 +785,24 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
     const j = map.getSource(JOURNEY_SOURCE) as GeoJSONSource | undefined;
     const jStops = map.getSource(JOURNEY_STOPS_SOURCE) as GeoJSONSource | undefined;
     const d = map.getSource(DESTINATION_SOURCE) as GeoJSONSource | undefined;
-    if (expressStops) expressStops.setData(routeStopsToGeoJSON(P2P_EXPRESS_STOPS, selectedStopId));
-    if (baityStops) baityStops.setData(routeStopsToGeoJSON(BAITY_HILL_STOPS, selectedStopId));
+    const expressCfg = routeConfigs.find((r) => r.routeId === 'P2P_EXPRESS');
+    const baityCfg = routeConfigs.find((r) => r.routeId === 'BAITY_HILL');
+    if (expressStops && expressCfg && expressCfg.stops.length > 0) {
+      expressStops.setData(
+        routeStopsToGeoJSON(
+          expressCfg.stops.map((s) => ({ id: s.id, name: s.name, lat: s.coord[1], lon: s.coord[0] })),
+          selectedStopId
+        )
+      );
+    }
+    if (baityStops && baityCfg && baityCfg.stops.length > 0) {
+      baityStops.setData(
+        routeStopsToGeoJSON(
+          baityCfg.stops.map((s) => ({ id: s.id, name: s.name, lat: s.coord[1], lon: s.coord[0] })),
+          selectedStopId
+        )
+      );
+    }
     if (u) u.setData(userToGeoJSON(userLocation));
     if (j) j.setData(journeyToGeoJSON(activeJourney));
     if (jStops) jStops.setData(journeyStopsToGeoJSON(activeJourney));
@@ -824,7 +847,7 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
         /* ignore if layers not ready */
       }
     }
-  }, [mapReady, selectedStopId, userLocation, activeJourney]);
+  }, [mapReady, selectedStopId, userLocation, activeJourney, routeConfigs]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -884,8 +907,26 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
       }
     };
 
+    const hashCoordList = (coords: [number, number][]): string => {
+      if (coords.length === 0) return '';
+      const first = coords[0];
+      const last = coords[coords.length - 1];
+      return `${coords.length}:${first[0].toFixed(5)},${first[1].toFixed(5)}|${last[0].toFixed(5)},${last[1].toFixed(5)}`;
+    };
+
     (['P2P_EXPRESS', 'BAITY_HILL'] as const).forEach((routeId) => {
-      fetch(`${API}/api/mapbox/route?routeId=${routeId}`)
+      const cfg = routeConfigs.find((r) => r.routeId === routeId);
+      if (!cfg || cfg.stops.length < 2) return;
+      const waypointCoords: [number, number][] = cfg.stops.map((s) => s.coord);
+      const h = hashCoordList(waypointCoords);
+      if (routeGeomFetchedHashRef.current[routeId] === h) return;
+      routeGeomFetchedHashRef.current[routeId] = h;
+
+      fetch(`${API}/api/mapbox/route`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ routeId, coords: waypointCoords }),
+      })
         .then((res) => (res.ok ? res.json() : Promise.reject(new Error(res.statusText))))
         .then((data: { geometry?: { type: string; coordinates: [number, number][] }; routeId: string }) => {
           if (!data.geometry || !data.geometry.coordinates.length) return;
@@ -899,24 +940,33 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
           }
           updateRouteLineSources();
         })
-        .catch((err) => console.warn('Route fetch failed', routeId, err));
+        .catch((err) => {
+          // Allow a retry on next config change.
+          routeGeomFetchedHashRef.current[routeId] = null;
+          console.warn('Route fetch failed', routeId, err);
+        });
     });
-  }, [mapReady]);
+  }, [mapReady, routeConfigs]);
 
   // Bus animation: snap to route, advance distMeters each tick, update buses source
   useEffect(() => {
     if (!mapReady || !mapRef.current || !vehicles.length) return;
     const map = mapRef.current;
     const interp = interpolatorsRef.current;
-    const routeIdToKey = (id: string) => (id === 'p2p-express' ? 'P2P_EXPRESS' : 'BAITY_HILL');
+    const routeIdToKey = (v: Vehicle): 'P2P_EXPRESS' | 'BAITY_HILL' => {
+      const internal = syncroRouteIdToInternal({ id: v.routeId, name: v.routeName });
+      if (internal) return internal;
+      // Backward-compat fallback for the legacy slug-style ids.
+      return v.routeId === 'p2p-express' ? 'P2P_EXPRESS' : 'BAITY_HILL';
+    };
 
     const initBusDist = (v: Vehicle) => {
-      const key = routeIdToKey(v.routeId);
+      const key = routeIdToKey(v);
       const ip = key === 'P2P_EXPRESS' ? interp.P2P_EXPRESS : interp.BAITY_HILL;
       if (ip && busDistMetersRef.current[v.id] === undefined) {
         const total = ip.totalLengthMeters;
-        const count = vehicles.filter((x) => routeIdToKey(x.routeId) === key).length;
-        const idx = vehicles.filter((x) => routeIdToKey(x.routeId) === key).indexOf(v);
+        const count = vehicles.filter((x) => routeIdToKey(x) === key).length;
+        const idx = vehicles.filter((x) => routeIdToKey(x) === key).indexOf(v);
         busDistMetersRef.current[v.id] = total * (idx / Math.max(count, 1));
       }
     };
@@ -926,7 +976,7 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
       lastTickRef.current = now;
       const positions: { id: string; routeId: string; lon: number; lat: number; bearing: number }[] = [];
       vehicles.forEach((v) => {
-        const key = routeIdToKey(v.routeId);
+        const key = routeIdToKey(v);
         const ip = key === 'P2P_EXPRESS' ? interp.P2P_EXPRESS : interp.BAITY_HILL;
         initBusDist(v);
         if (ip) {

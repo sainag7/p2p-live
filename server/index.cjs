@@ -15,12 +15,16 @@ const PORT = process.env.PORT || process.env.OPS_API_PORT || 3001;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-pro';
 const MAPBOX_TOKEN = process.env.MAPBOX_TOKEN;
+const SYNCROMATICS_API_KEY = process.env.SYNCROMATICS_API_KEY;
+const SYNCROMATICS_BASE = 'https://api.syncromatics.com';
 const CACHE_TTL_MS = 60 * 1000; // 60 seconds
 const ROUTE_CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
 const WALK_CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutes
+const SYNCRO_LONG_TTL_MS = 60 * 60 * 1000; // 60 min for stops/routes
 
 let routeCache = Object.create(null);
 let walkCache = Object.create(null);
+let syncroCache = Object.create(null);
 
 // Lightweight in-process diagnostics counters (reset on server restart).
 let failedLlmCalls = 0;
@@ -97,6 +101,45 @@ async function fetchMapboxRoute(routeId, coords) {
     distanceMeters: route?.distance != null ? route.distance : 0,
     durationSec: route?.duration != null ? route.duration : 0,
   };
+}
+
+function isValidCoordList(coords) {
+  if (!Array.isArray(coords) || coords.length < 2) return false;
+  for (const c of coords) {
+    if (!Array.isArray(c) || c.length !== 2) return false;
+    if (typeof c[0] !== 'number' || typeof c[1] !== 'number') return false;
+    if (!Number.isFinite(c[0]) || !Number.isFinite(c[1])) return false;
+  }
+  return true;
+}
+
+async function handleMapboxRouteWithCoords(routeId, coords, res) {
+  const cacheKey = routeId + ':' + hashCoords(coords);
+  const cached = routeCache[cacheKey];
+  if (cached && Date.now() - cached.at < ROUTE_CACHE_TTL_MS) {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(cached.payload));
+    return;
+  }
+  try {
+    const { geometry, distanceMeters, durationSec } = await fetchMapboxRoute(routeId, coords);
+    const waypoints = coords.map((c, i) => ({ name: `Stop ${i + 1}`, coordinates: c, order: i }));
+    const payload = {
+      routeId,
+      geometry: { type: geometry.type, coordinates: geometry.coordinates },
+      waypoints,
+      distanceMeters,
+      durationSec,
+    };
+    routeCache[cacheKey] = { payload, at: Date.now() };
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(payload));
+  } catch (err) {
+    console.error('Mapbox route error:', err.message);
+    routeDirectionsFailures += 1;
+    res.writeHead(500, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: err.message, routeId }));
+  }
 }
 
 async function handleMapboxRoute(routeId, res) {
@@ -443,6 +486,55 @@ async function handleAdminOptimizationSummary(req, body, res) {
   }
 }
 
+function shouldCacheSyncroPath(path) {
+  if (path === '/portal/stops' || path === '/portal/routes') return true;
+  return /^\/portal\/routes\/[^/]+\/stops$/.test(path);
+}
+
+async function handleSyncromaticsProxy(req, res) {
+  if (!SYNCROMATICS_API_KEY) {
+    res.writeHead(503, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'SYNCROMATICS_API_KEY is not set' }));
+    return;
+  }
+  const u = new URL(req.url, 'http://localhost');
+  const upstreamPath = u.pathname.replace(/^\/api\/syncromatics/, '');
+  if (!upstreamPath.startsWith('/portal/')) {
+    res.writeHead(400, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'Only /portal/* paths are proxied' }));
+    return;
+  }
+  const upstreamUrl = `${SYNCROMATICS_BASE}${upstreamPath}${u.search}`;
+  const cacheable = shouldCacheSyncroPath(upstreamPath) && !u.search;
+  if (cacheable) {
+    const cached = syncroCache[upstreamPath];
+    if (cached && Date.now() - cached.at < SYNCRO_LONG_TTL_MS) {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(cached.body);
+      return;
+    }
+  }
+  try {
+    const upstream = await fetch(upstreamUrl, {
+      method: 'GET',
+      headers: {
+        'Api-Key': SYNCROMATICS_API_KEY,
+        Accept: 'application/json',
+      },
+    });
+    const body = await upstream.text();
+    if (upstream.ok && cacheable) {
+      syncroCache[upstreamPath] = { body, at: Date.now() };
+    }
+    res.writeHead(upstream.status, { 'Content-Type': 'application/json' });
+    res.end(body);
+  } catch (err) {
+    console.error('Syncromatics proxy error:', err.message, 'path:', upstreamPath);
+    res.writeHead(502, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: err.message }));
+  }
+}
+
 const server = http.createServer((req, res) => {
   const origin = req.headers.origin;
 
@@ -576,6 +668,39 @@ const server = http.createServer((req, res) => {
     res.end(JSON.stringify({ error: 'routeId must be P2P_EXPRESS or BAITY_HILL' }));
     return;
   }
+  if (req.url && req.method === 'POST' && req.url.startsWith('/api/mapbox/route')) {
+    let body = '';
+    req.on('data', (chunk) => { body += chunk; });
+    req.on('end', () => {
+      let parsed;
+      try {
+        parsed = body ? JSON.parse(body) : {};
+      } catch (e) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Invalid JSON body' }));
+        return;
+      }
+      const routeId = parsed && parsed.routeId;
+      if (routeId !== 'P2P_EXPRESS' && routeId !== 'BAITY_HILL') {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'routeId must be P2P_EXPRESS or BAITY_HILL' }));
+        return;
+      }
+      const coords = parsed.coords;
+      if (!coords || (Array.isArray(coords) && coords.length === 0)) {
+        // Fall back to mock waypoints when client didn't provide any.
+        handleMapboxRoute(routeId, res);
+        return;
+      }
+      if (!isValidCoordList(coords)) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'coords must be an array of [lng,lat] pairs (length >= 2)' }));
+        return;
+      }
+      handleMapboxRouteWithCoords(routeId, coords, res);
+    });
+    return;
+  }
   const walkMatch = req.url && req.method === 'GET' && req.url.startsWith('/api/mapbox/directions/walk');
   if (walkMatch) {
     const u = new URL(req.url, 'http://localhost');
@@ -610,6 +735,11 @@ const server = http.createServer((req, res) => {
     res.end(JSON.stringify({ arrivals }));
     return;
   }
+  const syncroMatch = req.url && req.method === 'GET' && req.url.startsWith('/api/syncromatics/');
+  if (syncroMatch) {
+    handleSyncromaticsProxy(req, res);
+    return;
+  }
   if (req.url === '/api/admin-optimization-summary' && req.method === 'POST') {
     let body = '';
     req.on('data', (chunk) => { body += chunk; });
@@ -634,6 +764,9 @@ server.listen(PORT, "0.0.0.0", () => {
   }
   if (!MAPBOX_TOKEN) {
     console.warn('Warning: MAPBOX_TOKEN not set. /api/mapbox/route will return 500.');
+  }
+  if (!SYNCROMATICS_API_KEY) {
+    console.warn('Warning: SYNCROMATICS_API_KEY not set. /api/syncromatics/* will return 503.');
   }
   console.log(`API server listening on port ${PORT}`);
 });
