@@ -1,0 +1,271 @@
+/* Final rider-surface layer. It unifies the public app around the existing
+   iOS tokens without changing route identity or the system font stack. */
+.passenger-app {
+  --rider-bg: #f8f8fb;
+  --rider-grouped: #f8f8fb;
+}
+
+.passenger-app.is-light { --rider-bg: #f8f8fb; }
+
+.passenger-app .home-main {
+  padding-bottom: calc(var(--rider-nav-h) + 12px);
+  color: var(--rider-ink);
+}
+
+.passenger-app .home-content {
+  padding: 4px 16px 32px;
+  font-size: 17px;
+  line-height: 1.35;
+}
+
+.passenger-app .home-content [data-route="P2P_EXPRESS"] {
+  --home-route: var(--rider-blue);
+  --home-tint: var(--rider-blue-tint);
+  --home-action: var(--rider-tint);
+  --home-action-hover: var(--rider-tint-press);
+}
+
+.passenger-app .home-content [data-route="BAITY_HILL"] {
+  --home-route: var(--rider-red);
+  --home-tint: var(--rider-red-tint);
+  --home-action: var(--rider-tint);
+  --home-action-hover: var(--rider-tint-press);
+}
+
+.passenger-app .home-status-line {
+  padding: 4px 0 12px;
+  font-size: 15px;
+  font-weight: 590;
+  color: var(--rider-secondary);
+}
+
+.passenger-app .home-status-line.active { color: var(--rider-success-ink); }
+.passenger-app .home-status-line.warning { color: var(--rider-warning-ink); }
+.passenger-app .home-status-line.inactive { color: var(--rider-secondary); }
+.passenger-app .home-live-dot { width: 8px; height: 8px; background: var(--rider-success); }
+
+.passenger-app .home-title {
+  margin: 4px 0 12px;
+  font-size: 34px;
+  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: -0.6px;
+  color: var(--rider-ink);
+}
+
+.passenger-app .home-catch,
+.passenger-app .home-empty-card {
+  padding: 16px;
+  border: 0;
+  border-radius: var(--rider-radius-lg);
+  background: var(--rider-surface);
+  box-shadow: none;
+}
+
+.passenger-app .home-catch { transition: box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+.passenger-app .home-route-pill { min-height: 28px; border-radius: 980px; font-size: 13px; font-weight: 650; }
+.passenger-app .home-catch-time { margin: 12px 0; }
+.passenger-app .home-go { color: var(--rider-ink); }
+.passenger-app .home-go-label,
+.passenger-app .home-go-unit { color: var(--rider-secondary); }
+.passenger-app .home-go strong { font-size: 56px; font-weight: 700; letter-spacing: -1.8px; }
+.passenger-app .home-go.now strong { font-size: 40px; color: var(--rider-danger); }
+.passenger-app .home-boarding > span,
+.passenger-app .home-source,
+.passenger-app .home-bus-line,
+.passenger-app .home-bus-copy > span:not(.home-source) { color: var(--rider-secondary); }
+.passenger-app .home-boarding h3 { font-size: 22px; font-weight: 700; color: var(--rider-ink); }
+.passenger-app .home-bus-line { margin: 10px 0; font-size: 15px; }
+.passenger-app .home-bus-line svg { color: var(--home-route); }
+
+.passenger-app .home-primary,
+.passenger-app .trip-start,
+.passenger-app .campus-primary {
+  min-height: 50px;
+  border: 0;
+  border-radius: var(--rider-radius-btn);
+  background: var(--rider-tint);
+  color: #fff;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.passenger-app .home-primary { justify-content: center; text-align: center; }
+.passenger-app .home-primary:active,
+.passenger-app .trip-start:active,
+.passenger-app .campus-primary:active { background: var(--rider-tint-press); }
+
+/* Search and pinned places follow the iOS grouped-list pattern. */
+.passenger-app .home-where { margin-top: var(--rider-section-gap); }
+.passenger-app .home-where h2,
+.passenger-app .home-list-heading h2 { font-size: 20px; line-height: 1.2; font-weight: 700; letter-spacing: -0.3px; }
+.passenger-app .home-search {
+  min-height: 48px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--rider-search-fill);
+  color: var(--rider-secondary);
+  font-size: 17px;
+  transition: background-color 0.2s ease;
+}
+
+.passenger-app .home-search:active { transform: none; background: var(--rider-fill-strong); }
+.passenger-app .home-places {
+  margin-top: 12px;
+  overflow: hidden;
+  border-radius: var(--rider-radius-lg);
+  background: var(--rider-surface);
+}
+
+.passenger-app .home-place {
+  position: relative;
+  min-height: 64px;
+  padding: 12px 16px;
+  color: var(--rider-ink);
+  transition: background-color 0.2s ease;
+}
+
+.passenger-app .home-place:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 68px;
+  height: var(--rider-hairline);
+  background: var(--rider-separator);
+}
+
+.passenger-app .home-place:active { transform: none; background: var(--rider-fill); }
+.passenger-app .home-place-tile { width: 36px; height: 36px; border-radius: 10px; background: var(--rider-blue-tint); color: var(--rider-blue); }
+.passenger-app .home-place-copy > strong { font-size: 17px; font-weight: 600; }
+.passenger-app .home-place-meta,
+.passenger-app .home-place-sub,
+.passenger-app .home-place-arrive > small { color: var(--rider-secondary); }
+.passenger-app .home-place-arrive strong { font-size: 20px; color: var(--rider-ink); }
+.passenger-app .home-place-pill { border-radius: 980px; background: var(--rider-blue); }
+.passenger-app .home-place-pill[data-route="BAITY_HILL"] { background: var(--rider-red); }
+.passenger-app .home-place-pill.walk { background: var(--rider-fill); color: var(--rider-ink); }
+.passenger-app .home-places-empty { margin: 8px 4px 0; padding: 0; color: var(--rider-secondary); }
+.passenger-app .home-save-place {
+  min-height: 44px;
+  margin-top: 8px;
+  padding: 8px 4px;
+  border: 0;
+  border-radius: 0;
+  color: var(--rider-tint);
+  font-size: 17px;
+  font-weight: 400;
+}
+
+.passenger-app .home-campus { margin-top: var(--rider-section-gap); }
+.passenger-app .home-list-heading { margin: 0 4px 6px; }
+.passenger-app .home-list-explainer { color: var(--rider-secondary); }
+.passenger-app .home-bus-rows,
+.passenger-app .home-list-skeleton { border-radius: var(--rider-radius-lg); background: var(--rider-surface); }
+.passenger-app .home-bus-row { min-height: 60px; padding: 11px 16px; color: var(--rider-ink); }
+.passenger-app .home-bus-row:active { background: var(--rider-fill); }
+.passenger-app .home-bus-copy > strong { color: var(--home-route); }
+.passenger-app .home-eta > span { color: var(--rider-ink); }
+.passenger-app .home-eta small,
+.passenger-app .home-list-empty { color: var(--rider-secondary); }
+
+.passenger-app header.home-header {
+  min-height: calc(44px + env(safe-area-inset-top));
+  padding: max(0px, env(safe-area-inset-top)) 16px 0;
+  background: var(--rider-nav-material);
+  border-bottom: var(--rider-hairline) solid var(--rider-separator);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+
+.passenger-app .home-header .home-wordmark { font-size: 22px; line-height: 44px; font-weight: 700; letter-spacing: -0.55px; }
+.passenger-app .passenger-nav {
+  height: var(--rider-nav-h);
+  border-radius: 0;
+  border-top: var(--rider-hairline) solid var(--rider-bar-edge);
+  background: var(--rider-nav-material);
+  box-shadow: none;
+  backdrop-filter: saturate(180%) blur(24px);
+  -webkit-backdrop-filter: saturate(180%) blur(24px);
+}
+
+.passenger-app .passenger-nav button { min-height: 49px; gap: 1px; color: var(--rider-tab-inactive); font-size: 10px; font-weight: 500; }
+.passenger-app .passenger-nav button[aria-current="page"] { color: var(--rider-tint); }
+.passenger-app .passenger-nav button svg { width: 26px; height: 26px; }
+
+/* Full-screen search becomes a native-feeling grouped sheet. */
+.ss-root {
+  --ink: var(--rider-ink);
+  --muted: var(--rider-secondary);
+  --line: var(--rider-separator);
+  --field: var(--rider-search-fill);
+  --accent: var(--rider-tint);
+}
+
+.ss-dim { background: rgba(0, 0, 0, 0.28); }
+.ss-sheet { background: var(--rider-bg); }
+.ss-header { background: var(--rider-surface); border-bottom: var(--rider-hairline) solid var(--rider-separator); }
+.ss-field { border-radius: 10px; color: var(--rider-secondary); }
+.ss-field:focus-within { box-shadow: 0 0 0 3px color-mix(in srgb, var(--rider-tint) 28%, transparent); }
+.ss-field input { font-size: 17px; color: var(--rider-ink); }
+.ss-field input::placeholder { color: var(--rider-tertiary); }
+.ss-cancel { color: var(--rider-tint); font-size: 17px; font-weight: 400; }
+.ss-segment { border-radius: 10px; background: var(--rider-fill); }
+.ss-segment-pill { border-radius: 10px; box-shadow: none; }
+.ss-segment button { color: var(--rider-secondary); font-size: 15px; font-weight: 500; }
+.ss-segment button[aria-pressed="true"] { color: var(--rider-ink); font-weight: 600; }
+.ss-label { padding: 0 4px; font-size: 15px; font-weight: 700; letter-spacing: -0.2px; text-transform: none; color: var(--rider-ink); }
+.ss-section + .ss-section { margin-top: 28px; }
+.ss-list { gap: 0; overflow: hidden; border-radius: var(--rider-radius-lg); background: var(--rider-surface); }
+.ss-list > .ss-row { position: relative; padding: 4px 4px 4px 12px; border: 0; border-radius: 0; background: transparent; }
+.ss-list > .ss-row:not(:last-child)::after { content: ''; position: absolute; right: 0; bottom: 0; left: 64px; height: var(--rider-hairline); background: var(--rider-separator); }
+.ss-row-main,
+.ss-stop { min-height: 56px; color: var(--rider-ink); }
+.ss-row-main:active,
+.ss-stop:active { transform: none; background: var(--rider-fill); }
+.ss-tile { border-radius: 10px; background: var(--rider-fill); color: var(--rider-secondary); }
+.ss-tile[data-icon="star"] { background: var(--rider-blue-tint); color: var(--rider-blue); }
+.ss-row-text strong { font-size: 17px; font-weight: 600; }
+.ss-row-text > span,
+.ss-row-walk,
+.ss-note,
+.ss-service,
+.ss-time-none { color: var(--rider-secondary); }
+.ss-star { color: var(--rider-tertiary); }
+.ss-star[aria-pressed="true"] { color: var(--rider-warning); }
+.ss-icon-button { width: 44px; height: 44px; }
+.ss-close { background: var(--rider-fill); }
+.ss-endpoint { border-radius: 10px; background: var(--rider-search-fill); color: var(--rider-ink); }
+.ss-endpoint > svg,
+.ss-chip { color: var(--rider-tint); }
+.ss-chip { border-radius: 980px; background: var(--rider-blue-tint); }
+.ss-time { background: var(--rider-blue-tint); color: var(--rider-ink); }
+.ss-time[data-route="BAITY_HILL"] { background: var(--rider-red-tint); color: var(--rider-ink); }
+.ss-time-route { color: var(--rider-blue); }
+.ss-time[data-route="BAITY_HILL"] .ss-time-route { color: var(--rider-red); }
+.ss-time-then { color: var(--rider-secondary); }
+.ss-error { border: 0; border-radius: var(--rider-radius); background: #fff7ed; color: var(--rider-warning-ink); }
+.ss-error button { min-height: 44px; border-radius: var(--rider-radius); background: var(--rider-tint); }
+
+/* Trip choices use system tint for actions; blue and red stay route identifiers. */
+.passenger-app .trip-view { color: var(--rider-ink); }
+.passenger-app .trip-view [data-route="P2P_EXPRESS"] { --trip-route: var(--rider-blue); --trip-tint: var(--rider-blue-tint); --trip-tint-border: transparent; --trip-action: var(--rider-tint); }
+.passenger-app .trip-view [data-route="BAITY_HILL"] { --trip-route: var(--rider-red); --trip-tint: var(--rider-red-tint); --trip-tint-border: transparent; --trip-action: var(--rider-tint); }
+.passenger-app .trip-view .trip-option,
+.passenger-app .trip-view .trip-hero,
+.passenger-app .trip-view .trip-compare { border: 0; box-shadow: none; }
+.passenger-app .trip-view .trip-option[aria-pressed="true"][data-mode="walk"] { border-color: transparent; background: var(--rider-fill); }
+.passenger-app .trip-view .trip-option[aria-pressed="true"][data-mode="bus"] { border-color: transparent; background: var(--trip-tint); }
+.passenger-app .trip-view .trip-steps { background: var(--rider-surface); }
+.passenger-app .trip-view .trip-refresh { min-height: 50px; border-radius: var(--rider-radius-btn); }
+
+@media (min-width: 768px) {
+  .passenger-app .home-content { padding-inline: 24px; }
+  .passenger-app header.home-header { padding-inline: 24px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .passenger-app *, .ss-root *, .ss-root *::after { animation: none !important; transition: none !important; }
+}

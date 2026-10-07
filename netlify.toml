@@ -3,3 +3,8 @@
   to = "https://p2p-live.onrender.com/api/:splat"
   status = 200
   force = true
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

@@ -1,0 +1,911 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-26T08:01:23Z",
+  "title": "Design System: P2P Live Rider",
+  "extensions": {
+    "colorMeta": {
+      "system-tint": {
+        "role": "primary",
+        "displayName": "System Tint",
+        "canonical": "#007AFF",
+        "tonalRamp": [
+          "#003166",
+          "#004999",
+          "#0062CC",
+          "#007AFF",
+          "#3395FF",
+          "#66AFFF",
+          "#99C9FF",
+          "#CCE4FF"
+        ]
+      },
+      "system-tint-press": {
+        "role": "primary",
+        "displayName": "System Tint Press",
+        "canonical": "#0066D6",
+        "tonalRamp": [
+          "#002A59",
+          "#003F86",
+          "#0055B3",
+          "#0066D6",
+          "#3385DE",
+          "#66A3E6",
+          "#99C2EF",
+          "#CCE0F7"
+        ]
+      },
+      "express-blue": {
+        "role": "primary",
+        "displayName": "Express Blue",
+        "canonical": "#418FC5",
+        "tonalRamp": [
+          "#16324A",
+          "#214B6F",
+          "#2C6494",
+          "#418FC5",
+          "#67A5D1",
+          "#8DBCDD",
+          "#B3D2E8",
+          "#D9E9F4"
+        ]
+      },
+      "baity-red": {
+        "role": "primary",
+        "displayName": "Baity Red",
+        "canonical": "#C33934",
+        "tonalRamp": [
+          "#4A1513",
+          "#6F1F1D",
+          "#942A26",
+          "#C33934",
+          "#CF615D",
+          "#DB8885",
+          "#E7B0AE",
+          "#F3D7D6"
+        ]
+      },
+      "express-tint": {
+        "role": "secondary",
+        "displayName": "Express Wash",
+        "canonical": "#E8F4FC",
+        "tonalRamp": [
+          "#2A5066",
+          "#3F7899",
+          "#54A0CC",
+          "#7BB8D9",
+          "#A2D0E6",
+          "#C9E4F2",
+          "#E8F4FC",
+          "#F4FAFE"
+        ]
+      },
+      "baity-tint": {
+        "role": "secondary",
+        "displayName": "Baity Wash",
+        "canonical": "#FCEEEE",
+        "tonalRamp": [
+          "#66302E",
+          "#994845",
+          "#CC605C",
+          "#E08F8C",
+          "#EFB7B5",
+          "#F7D6D4",
+          "#FCEEEE",
+          "#FEF7F7"
+        ]
+      },
+      "grouped-bg": {
+        "role": "neutral",
+        "displayName": "System Grouped Background",
+        "canonical": "#F2F2F7",
+        "tonalRamp": [
+          "#1C1C1E",
+          "#3A3A3C",
+          "#636366",
+          "#8E8E93",
+          "#AEAEB2",
+          "#C7C7CC",
+          "#E5E5EA",
+          "#F2F2F7"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Inset Surface",
+        "canonical": "#FFFFFF",
+        "tonalRamp": [
+          "#1C1C1E",
+          "#2C2C2E",
+          "#3A3A3C",
+          "#48484A",
+          "#636366",
+          "#8E8E93",
+          "#E5E5EA",
+          "#FFFFFF"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#000000",
+        "tonalRamp": [
+          "#000000",
+          "#1C1C1E",
+          "#3A3A3C",
+          "#636366",
+          "#8E8E93",
+          "#AEAEB2",
+          "#C7C7CC",
+          "#F2F2F7"
+        ]
+      },
+      "secondary-label": {
+        "role": "neutral",
+        "displayName": "Secondary Label",
+        "canonical": "rgba(60, 60, 67, 0.6)",
+        "tonalRamp": [
+          "#1C1C1E",
+          "#3A3A3C",
+          "#48484A",
+          "#636366",
+          "#8E8E93",
+          "#AEAEB2",
+          "#C7C7CC",
+          "#E5E5EA"
+        ]
+      },
+      "tertiary-label": {
+        "role": "neutral",
+        "displayName": "Tertiary Label",
+        "canonical": "rgba(60, 60, 67, 0.3)",
+        "tonalRamp": [
+          "#3A3A3C",
+          "#48484A",
+          "#636366",
+          "#8E8E93",
+          "#AEAEB2",
+          "#C7C7CC",
+          "#D1D1D6",
+          "#E5E5EA"
+        ]
+      },
+      "separator": {
+        "role": "neutral",
+        "displayName": "Separator",
+        "canonical": "rgba(60, 60, 67, 0.12)",
+        "tonalRamp": [
+          "#3A3A3C",
+          "#48484A",
+          "#636366",
+          "#8E8E93",
+          "#AEAEB2",
+          "#C7C7CC",
+          "#D1D1D6",
+          "#E5E5EA"
+        ]
+      },
+      "fill": {
+        "role": "neutral",
+        "displayName": "Fill",
+        "canonical": "rgba(120, 120, 128, 0.16)",
+        "tonalRamp": [
+          "#48484A",
+          "#636366",
+          "#8E8E93",
+          "#AEAEB2",
+          "#C7C7CC",
+          "#D1D1D6",
+          "#E5E5EA",
+          "#F2F2F7"
+        ]
+      },
+      "fill-strong": {
+        "role": "neutral",
+        "displayName": "Fill Strong",
+        "canonical": "rgba(120, 120, 128, 0.2)",
+        "tonalRamp": [
+          "#48484A",
+          "#636366",
+          "#8E8E93",
+          "#AEAEB2",
+          "#C7C7CC",
+          "#D1D1D6",
+          "#E5E5EA",
+          "#F2F2F7"
+        ]
+      },
+      "success": {
+        "role": "secondary",
+        "displayName": "System Green",
+        "canonical": "#34C759",
+        "tonalRamp": [
+          "#0E3B1A",
+          "#165928",
+          "#1E7735",
+          "#34C759",
+          "#5DD27A",
+          "#86DD9B",
+          "#AEE9BD",
+          "#D7F4DE"
+        ]
+      },
+      "warning": {
+        "role": "secondary",
+        "displayName": "System Orange",
+        "canonical": "#FF9500",
+        "tonalRamp": [
+          "#4C2C00",
+          "#734300",
+          "#995900",
+          "#FF9500",
+          "#FFAA33",
+          "#FFBF66",
+          "#FFD499",
+          "#FFEACC"
+        ]
+      },
+      "danger": {
+        "role": "secondary",
+        "displayName": "System Red",
+        "canonical": "#FF3B30",
+        "tonalRamp": [
+          "#4C120E",
+          "#731B16",
+          "#99241D",
+          "#FF3B30",
+          "#FF6259",
+          "#FF8982",
+          "#FFB1AC",
+          "#FFD8D5"
+        ]
+      },
+      "warning-wash": {
+        "role": "secondary",
+        "displayName": "Warning Wash",
+        "canonical": "#FFF7ED",
+        "tonalRamp": [
+          "#663C00",
+          "#995A00",
+          "#CC7800",
+          "#FF9500",
+          "#FFB84D",
+          "#FFD08A",
+          "#FFE8C7",
+          "#FFF7ED"
+        ]
+      },
+      "night-surface": {
+        "role": "neutral",
+        "displayName": "Night Surface",
+        "canonical": "#1C1C1E",
+        "tonalRamp": [
+          "#000000",
+          "#1C1C1E",
+          "#2C2C2E",
+          "#3A3A3C",
+          "#48484A",
+          "#636366",
+          "#8E8E93",
+          "#AEAEB2"
+        ]
+      },
+      "on-primary": {
+        "role": "neutral",
+        "displayName": "On Primary",
+        "canonical": "#FFFFFF",
+        "tonalRamp": [
+          "#1C1C1E",
+          "#3A3A3C",
+          "#636366",
+          "#8E8E93",
+          "#AEAEB2",
+          "#C7C7CC",
+          "#E5E5EA",
+          "#FFFFFF"
+        ]
+      },
+      "disclosure": {
+        "role": "neutral",
+        "displayName": "Disclosure",
+        "canonical": "#C7C7CC",
+        "tonalRamp": [
+          "#48484A",
+          "#636366",
+          "#8E8E93",
+          "#AEAEB2",
+          "#C7C7CC",
+          "#D1D1D6",
+          "#E5E5EA",
+          "#F2F2F7"
+        ]
+      },
+      "tab-inactive": {
+        "role": "neutral",
+        "displayName": "Tab Inactive",
+        "canonical": "#8E8E93",
+        "tonalRamp": [
+          "#3A3A3C",
+          "#48484A",
+          "#636366",
+          "#8E8E93",
+          "#AEAEB2",
+          "#C7C7CC",
+          "#D1D1D6",
+          "#E5E5EA"
+        ]
+      },
+      "success-ink": {
+        "role": "secondary",
+        "displayName": "Success Ink",
+        "canonical": "#248A3D",
+        "tonalRamp": [
+          "#0E3B1A",
+          "#165928",
+          "#1E7735",
+          "#248A3D",
+          "#4BA55C",
+          "#72BF85",
+          "#A0D6AD",
+          "#D0EBD6"
+        ]
+      },
+      "warning-ink": {
+        "role": "secondary",
+        "displayName": "Warning Ink",
+        "canonical": "#9A6700",
+        "tonalRamp": [
+          "#3D2900",
+          "#5C3E00",
+          "#7A5200",
+          "#9A6700",
+          "#B38533",
+          "#CBA366",
+          "#E0C299",
+          "#F2E0CC"
+        ]
+      },
+      "nav-material": {
+        "role": "neutral",
+        "displayName": "Nav Material",
+        "canonical": "rgba(249, 249, 249, 0.78)",
+        "tonalRamp": [
+          "#1C1C1E",
+          "#3A3A3C",
+          "#636366",
+          "#8E8E93",
+          "#AEAEB2",
+          "#C7C7CC",
+          "#E5E5EA",
+          "#F9F9F9"
+        ]
+      },
+      "search-fill": {
+        "role": "neutral",
+        "displayName": "Search Fill",
+        "canonical": "rgba(118, 118, 128, 0.12)",
+        "tonalRamp": [
+          "#48484A",
+          "#636366",
+          "#8E8E93",
+          "#AEAEB2",
+          "#C7C7CC",
+          "#D1D1D6",
+          "#E5E5EA",
+          "#F2F2F7"
+        ]
+      },
+      "bar-edge": {
+        "role": "neutral",
+        "displayName": "Bar Edge",
+        "canonical": "rgba(0, 0, 0, 0.18)",
+        "tonalRamp": [
+          "#000000",
+          "#1C1C1E",
+          "#3A3A3C",
+          "#636366",
+          "#8E8E93",
+          "#AEAEB2",
+          "#C7C7CC",
+          "#E5E5EA"
+        ]
+      },
+      "urgency-soon-wash": {
+        "role": "secondary",
+        "displayName": "Urgency Soon Wash",
+        "canonical": "#FFF3CD",
+        "tonalRamp": [
+          "#665200",
+          "#997A00",
+          "#CCA300",
+          "#FF9500",
+          "#FFB84D",
+          "#FFD08A",
+          "#FFE8C7",
+          "#FFF3CD"
+        ]
+      },
+      "urgency-now-wash": {
+        "role": "secondary",
+        "displayName": "Urgency Now Wash",
+        "canonical": "#FFE5E3",
+        "tonalRamp": [
+          "#660A0A",
+          "#991010",
+          "#CC1515",
+          "#FF3B30",
+          "#FF6259",
+          "#FF8982",
+          "#FFB1AC",
+          "#FFE5E3"
+        ]
+      },
+      "urgency-now-ink": {
+        "role": "secondary",
+        "displayName": "Urgency Now Ink",
+        "canonical": "#D70015",
+        "tonalRamp": [
+          "#4C0008",
+          "#73000B",
+          "#99000F",
+          "#D70015",
+          "#DF3344",
+          "#E76673",
+          "#EF99A1",
+          "#F7CCD0"
+        ]
+      },
+      "moon": {
+        "role": "neutral",
+        "displayName": "Moon",
+        "canonical": "#F4EFD6",
+        "tonalRamp": [
+          "#5C5740",
+          "#8A8260",
+          "#B8AD80",
+          "#D4CBA0",
+          "#E4DCB8",
+          "#EEE8CC",
+          "#F4EFD6",
+          "#FAF7EB"
+        ]
+      },
+      "night-secondary": {
+        "role": "neutral",
+        "displayName": "Night Secondary",
+        "canonical": "rgba(235, 235, 245, 0.6)",
+        "tonalRamp": [
+          "#1C1C1E",
+          "#2C2C2E",
+          "#3A3A3C",
+          "#48484A",
+          "#636366",
+          "#8E8E93",
+          "#AEAEB2",
+          "#EBEBF5"
+        ]
+      },
+      "night-action": {
+        "role": "neutral",
+        "displayName": "Night Action",
+        "canonical": "rgba(255, 255, 255, 0.12)",
+        "tonalRamp": [
+          "#1C1C1E",
+          "#2C2C2E",
+          "#3A3A3C",
+          "#48484A",
+          "#636366",
+          "#8E8E93",
+          "#AEAEB2",
+          "#FFFFFF"
+        ]
+      },
+      "night-action-press": {
+        "role": "neutral",
+        "displayName": "Night Action Press",
+        "canonical": "rgba(255, 255, 255, 0.18)",
+        "tonalRamp": [
+          "#1C1C1E",
+          "#2C2C2E",
+          "#3A3A3C",
+          "#48484A",
+          "#636366",
+          "#8E8E93",
+          "#AEAEB2",
+          "#FFFFFF"
+        ]
+      },
+      "night-focus": {
+        "role": "primary",
+        "displayName": "Night Focus",
+        "canonical": "#64D2FF",
+        "tonalRamp": [
+          "#003D5C",
+          "#005C8A",
+          "#007AB8",
+          "#0096E0",
+          "#64D2FF",
+          "#8BDDFF",
+          "#B1E8FF",
+          "#D8F4FF"
+        ]
+      },
+      "warning-ring": {
+        "role": "secondary",
+        "displayName": "Warning Ring",
+        "canonical": "rgba(255, 149, 0, 0.45)",
+        "tonalRamp": [
+          "#4C2C00",
+          "#734300",
+          "#995900",
+          "#FF9500",
+          "#FFAA33",
+          "#FFBF66",
+          "#FFD499",
+          "#FFEACC"
+        ]
+      },
+      "danger-ring": {
+        "role": "secondary",
+        "displayName": "Danger Ring",
+        "canonical": "rgba(255, 59, 48, 0.5)",
+        "tonalRamp": [
+          "#4C120E",
+          "#731B16",
+          "#99241D",
+          "#FF3B30",
+          "#FF6259",
+          "#FF8982",
+          "#FFB1AC",
+          "#FFD8D5"
+        ]
+      },
+      "danger-pulse": {
+        "role": "secondary",
+        "displayName": "Danger Pulse",
+        "canonical": "rgba(255, 59, 48, 0.25)",
+        "tonalRamp": [
+          "#4C120E",
+          "#731B16",
+          "#99241D",
+          "#FF3B30",
+          "#FF6259",
+          "#FF8982",
+          "#FFB1AC",
+          "#FFD8D5"
+        ]
+      },
+      "frosted-grouped": {
+        "role": "neutral",
+        "displayName": "Frosted Grouped",
+        "canonical": "rgba(242, 242, 247, 0.72)",
+        "tonalRamp": [
+          "#1C1C1E",
+          "#3A3A3C",
+          "#636366",
+          "#8E8E93",
+          "#AEAEB2",
+          "#C7C7CC",
+          "#E5E5EA",
+          "#F2F2F7"
+        ]
+      },
+      "frosted-white": {
+        "role": "neutral",
+        "displayName": "Frosted White",
+        "canonical": "rgba(255, 255, 255, 0.72)",
+        "tonalRamp": [
+          "#1C1C1E",
+          "#3A3A3C",
+          "#636366",
+          "#8E8E93",
+          "#AEAEB2",
+          "#C7C7CC",
+          "#E5E5EA",
+          "#FFFFFF"
+        ]
+      },
+      "success-wash": {
+        "role": "secondary",
+        "displayName": "success-wash",
+        "canonical": "#E8F8ED",
+        "tonalRamp": [
+          "#E8F8ED"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display ETA",
+        "purpose": "Home next-ride minutes; the glance number."
+      },
+      "display-sm": {
+        "displayName": "Display Compact",
+        "purpose": "Go-now compact glance on the catch card."
+      },
+      "display-night": {
+        "displayName": "Display Night",
+        "purpose": "Off-hours countdown on the night card."
+      },
+      "headline": {
+        "displayName": "Large Title",
+        "purpose": "Plan Trip title and sheet ETA."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Home section title and trip destination."
+      },
+      "title-sm": {
+        "displayName": "Title Small",
+        "purpose": "List headings, wordmark, boarding stop."
+      },
+      "section": {
+        "displayName": "Section",
+        "purpose": "Empty-card titles, Go-in label, trip section heads."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Default content and primary button labels."
+      },
+      "callout": {
+        "displayName": "Callout",
+        "purpose": "Status lines, secondary rows, chips."
+      },
+      "footnote": {
+        "displayName": "Footnote",
+        "purpose": "Explainers, source lines, route pills."
+      },
+      "caption": {
+        "displayName": "Caption",
+        "purpose": "ETA unit labels, banner meta, pull-to-refresh hint."
+      },
+      "tab-label": {
+        "displayName": "Tab Label",
+        "purpose": "Bottom navigation captions only."
+      }
+    },
+    "shadows": [
+      {
+        "name": "ambient-control",
+        "value": "0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04)",
+        "purpose": "Floating map chips, controls, and banners."
+      },
+      {
+        "name": "sheet-lift",
+        "value": "0 -8px 40px rgba(0, 0, 0, 0.12)",
+        "purpose": "Bus detail and campus bottom sheets."
+      },
+      {
+        "name": "urgency-ring-soon",
+        "value": "inset 0 0 0 1.5px rgba(255, 149, 0, 0.45)",
+        "purpose": "Catch card when departure is soon."
+      },
+      {
+        "name": "urgency-ring-now",
+        "value": "inset 0 0 0 1.5px rgba(255, 59, 48, 0.5)",
+        "purpose": "Catch card when departure is now."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out-expo",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Catch card and sheet entrance / state transitions."
+      },
+      {
+        "name": "live-pulse",
+        "value": "2s ease-out infinite",
+        "purpose": "Live status dot ripple."
+      },
+      {
+        "name": "urgent-throb",
+        "value": "1.2s ease-in-out infinite",
+        "purpose": "NOW ETA digit scale pulse; disabled under reduced motion."
+      },
+      {
+        "name": "urgent-ring-pulse",
+        "value": "1.8s ease-out infinite",
+        "purpose": "Catch card now urgency outer pulse."
+      },
+      {
+        "name": "sheet-in",
+        "value": "0.32s cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Campus sheet entrance."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Full-width system-tint CTA for leave-now and trip actions.",
+      "html": "<button class=\"ds-btn-primary\" type=\"button\">Leave now</button>",
+      "css": ".ds-btn-primary { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 50px; padding: 14px 16px; border: none; border-radius: 14px; background: #007AFF; color: #fff; font-family: -apple-system, BlinkMacSystemFont, \"SF Pro Text\", \"Helvetica Neue\", Helvetica, Arial, sans-serif; font-size: 17px; font-weight: 600; text-align: center; cursor: pointer; transition: background 0.15s ease; } .ds-btn-primary:hover, .ds-btn-primary:active { background: #0066D6; } .ds-btn-primary:focus-visible { outline: 3px solid #007AFF; outline-offset: 2px; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Fill-wash, tint-text secondary action inside inset surfaces.",
+      "html": "<button class=\"ds-btn-secondary\" type=\"button\">See buses on map</button>",
+      "css": ".ds-btn-secondary { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; min-height: 44px; padding: 10px 12px; border: none; border-radius: 12px; background: rgba(120, 120, 128, 0.16); color: #007AFF; font-family: -apple-system, BlinkMacSystemFont, \"SF Pro Text\", \"Helvetica Neue\", Helvetica, Arial, sans-serif; font-size: 17px; font-weight: 600; text-align: left; cursor: pointer; } .ds-btn-secondary:hover, .ds-btn-secondary:active { background: rgba(120, 120, 128, 0.2); } .ds-btn-secondary:focus-visible { outline: 3px solid #007AFF; outline-offset: 2px; } .ds-btn-secondary:disabled { opacity: 0.45; }"
+    },
+    {
+      "name": "Route Pill",
+      "kind": "chip",
+      "refersTo": "route-pill",
+      "description": "Capsule route identity chip in Express blue or Baity red.",
+      "html": "<span class=\"ds-route-pill ds-route-pill--express\">P2P Express</span>",
+      "css": ".ds-route-pill { display: inline-flex; align-items: center; min-height: 28px; padding: 4px 10px; border-radius: 980px; color: #fff; font-family: -apple-system, BlinkMacSystemFont, \"SF Pro Text\", \"Helvetica Neue\", Helvetica, Arial, sans-serif; font-size: 13px; font-weight: 650; line-height: 1.2; } .ds-route-pill--express { background: #418FC5; } .ds-route-pill--baity { background: #C33934; }"
+    },
+    {
+      "name": "Inset Grouped List",
+      "kind": "card",
+      "refersTo": "inset-grouped-list",
+      "description": "White inset list with hairline separators on grouped background.",
+      "html": "<div class=\"ds-canvas\"><div class=\"ds-list\"><button class=\"ds-row\" type=\"button\"><span class=\"ds-row-copy\"><strong>P2P Express</strong><span>Student Stores</span></span><span class=\"ds-eta\"><span>4</span><small>min</small></span></button><button class=\"ds-row\" type=\"button\"><span class=\"ds-row-copy\"><strong>Baity Hill</strong><span>Baity Hill</span></span><span class=\"ds-eta\"><span>11</span><small>min</small></span></button></div></div>",
+      "css": ".ds-canvas { background: #F2F2F7; padding: 16px; font-family: -apple-system, BlinkMacSystemFont, \"SF Pro Text\", \"Helvetica Neue\", Helvetica, Arial, sans-serif; } .ds-list { display: flex; flex-direction: column; background: #fff; border-radius: 16px; overflow: hidden; } .ds-row { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 16px; min-height: 64px; border: none; border-bottom: 0.5px solid rgba(60, 60, 67, 0.12); background: transparent; text-align: left; color: #000; cursor: pointer; } .ds-row:last-child { border-bottom: 0; } .ds-row:hover, .ds-row:active { background: rgba(120, 120, 128, 0.16); } .ds-row:focus-visible { outline: 3px solid #007AFF; outline-offset: -3px; } .ds-row-copy { display: flex; flex: 1; flex-direction: column; gap: 2px; min-width: 0; } .ds-row-copy strong { font-size: 17px; font-weight: 600; color: #418FC5; } .ds-row-copy span { font-size: 15px; color: rgba(60, 60, 67, 0.6); } .ds-eta { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; min-width: 44px; font-variant-numeric: tabular-nums; line-height: 1; } .ds-eta > span { font-size: 22px; font-weight: 600; letter-spacing: -0.5px; color: #000; } .ds-eta small { font-size: 12px; font-weight: 500; color: rgba(60, 60, 67, 0.6); }"
+    },
+    {
+      "name": "Next-Ride Catch",
+      "kind": "card",
+      "refersTo": "catch-card",
+      "description": "Signature glance surface: route pill, huge ETA, boarding stop, primary CTA.",
+      "html": "<article class=\"ds-catch\"><div class=\"ds-catch-top\"><span class=\"ds-route-pill\">P2P Express</span><span class=\"ds-urgency\">Leave soon</span></div><div class=\"ds-go\"><span class=\"ds-go-label\">Go in</span><strong>6</strong><span class=\"ds-go-unit\">min</span></div><div class=\"ds-board\"><span>Board at</span><h3>Student Stores</h3></div><button class=\"ds-btn-primary\" type=\"button\">Leave now</button></article>",
+      "css": ".ds-catch { padding: 16px; background: #fff; border-radius: 16px; font-family: -apple-system, BlinkMacSystemFont, \"SF Pro Text\", \"Helvetica Neue\", Helvetica, Arial, sans-serif; color: #000; box-shadow: inset 0 0 0 1.5px rgba(255, 149, 0, 0.45); } .ds-catch-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; } .ds-route-pill { display: inline-flex; align-items: center; min-height: 28px; padding: 4px 10px; border-radius: 980px; background: #418FC5; color: #fff; font-size: 13px; font-weight: 650; } .ds-urgency { padding: 4px 10px; border-radius: 980px; background: #FFF3CD; color: #9A6700; font-size: 13px; font-weight: 600; } .ds-go { display: flex; align-items: baseline; gap: 6px; margin: 12px 0; line-height: 1; } .ds-go-label, .ds-go-unit { font-size: 20px; font-weight: 600; color: rgba(60, 60, 67, 0.6); } .ds-go-unit { font-weight: 500; } .ds-go strong { font-size: 56px; font-weight: 700; letter-spacing: -1.8px; font-variant-numeric: tabular-nums; } .ds-board > span { font-size: 13px; font-weight: 500; color: rgba(60, 60, 67, 0.6); } .ds-board h3 { margin: 2px 0 12px; font-size: 22px; line-height: 1.2; font-weight: 700; letter-spacing: -0.35px; } .ds-btn-primary { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 50px; padding: 14px 16px; border: none; border-radius: 14px; background: #007AFF; color: #fff; font-size: 17px; font-weight: 600; cursor: pointer; } .ds-btn-primary:hover, .ds-btn-primary:active { background: #0066D6; } .ds-btn-primary:focus-visible { outline: 3px solid #007AFF; outline-offset: 2px; }"
+    },
+    {
+      "name": "Frosted Tab Bar",
+      "kind": "nav",
+      "refersTo": "tab-bar",
+      "description": "Frosted nav-material bottom tab bar with system-tint selected state.",
+      "html": "<nav class=\"ds-tabbar\" aria-label=\"Main navigation\"><button class=\"ds-tab ds-tab--current\" type=\"button\"><svg width=\"25\" height=\"25\" viewBox=\"0 0 24 24\" fill=\"currentColor\" stroke=\"none\" aria-hidden=\"true\"><path d=\"M3 10.5 12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z\"/></svg><span>Home</span></button><button class=\"ds-tab\" type=\"button\"><svg width=\"25\" height=\"25\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" aria-hidden=\"true\"><path d=\"M4 19 10 5l4 8 2-4 4 10\"/><circle cx=\"10\" cy=\"5\" r=\"1.5\"/><circle cx=\"14\" cy=\"13\" r=\"1.5\"/><circle cx=\"20\" cy=\"19\" r=\"1.5\"/></svg><span>Plan</span></button><button class=\"ds-tab\" type=\"button\"><svg width=\"25\" height=\"25\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" aria-hidden=\"true\"><path d=\"M9 18l6-6-6-6\"/><circle cx=\"12\" cy=\"12\" r=\"9\"/></svg><span>Map</span></button></nav>",
+      "css": ".ds-tabbar { display: flex; height: 49px; background: rgba(249, 249, 249, 0.78); backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px); border-top: 0.5px solid rgba(60, 60, 67, 0.12); font-family: -apple-system, BlinkMacSystemFont, \"SF Pro Text\", \"Helvetica Neue\", Helvetica, Arial, sans-serif; } .ds-tab { display: flex; flex: 1; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 49px; padding-top: 4px; border: none; background: transparent; color: #8E8E93; font-size: 10px; font-weight: 500; letter-spacing: -0.08px; cursor: pointer; } .ds-tab--current { color: #007AFF; } .ds-tab:hover { color: #007AFF; } .ds-tab:focus-visible { outline: 3px solid #007AFF; outline-offset: 2px; }"
+    },
+    {
+      "name": "Frosted Header Wordmark",
+      "kind": "nav",
+      "refersTo": "frosted-header",
+      "description": "Frosted nav header with P2P Live wordmark color lock.",
+      "html": "<header class=\"ds-header\"><h1 class=\"ds-wordmark\"><em>P<span>2</span>P</em> <span class=\"ds-live\">Live</span></h1><button class=\"ds-login\" type=\"button\">Log in</button></header>",
+      "css": ".ds-header { display: flex; align-items: center; justify-content: space-between; padding: 8px 16px 10px; background: rgba(249, 249, 249, 0.78); backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px); border-bottom: 0.5px solid rgba(60, 60, 67, 0.12); font-family: -apple-system, BlinkMacSystemFont, \"SF Pro Text\", \"Helvetica Neue\", Helvetica, Arial, sans-serif; } .ds-wordmark { margin: 0; font-size: 22px; font-weight: 700; line-height: 1.2; letter-spacing: -0.5px; color: #418FC5; white-space: nowrap; } .ds-wordmark em { font-style: italic; font-weight: 800; } .ds-wordmark em span { color: #C33934; } .ds-live { color: #000; font-style: normal; font-weight: 700; } .ds-login { display: inline-flex; align-items: center; min-height: 32px; padding: 6px 12px; border: none; border-radius: 980px; background: rgba(120, 120, 128, 0.16); color: #007AFF; font-size: 15px; font-weight: 600; cursor: pointer; } .ds-login:hover, .ds-login:active { background: rgba(120, 120, 128, 0.2); } .ds-login:focus-visible { outline: 3px solid #007AFF; outline-offset: 2px; }"
+    },
+    {
+      "name": "Campus Map Chip",
+      "kind": "chip",
+      "description": "Frosted floating map filter chip with route tag.",
+      "html": "<button class=\"ds-campus-chip\" type=\"button\" aria-pressed=\"true\"><span class=\"ds-route-tag\">EX</span><span class=\"ds-count\">3</span></button>",
+      "css": ".ds-campus-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 8px 12px; border: none; border-radius: 980px; background: rgba(255, 255, 255, 0.92); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04); backdrop-filter: saturate(180%) blur(16px); -webkit-backdrop-filter: saturate(180%) blur(16px); font-family: -apple-system, BlinkMacSystemFont, \"SF Pro Text\", \"Helvetica Neue\", Helvetica, Arial, sans-serif; font-size: 13px; font-weight: 590; color: #000; cursor: pointer; } .ds-campus-chip:hover { background: #fff; } .ds-campus-chip:focus-visible { outline: 3px solid #007AFF; outline-offset: 2px; } .ds-route-tag { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 20px; padding: 0 4px; border-radius: 5px; background: #418FC5; color: #fff; font-size: 10px; font-weight: 700; } .ds-count { font-size: 13px; font-weight: 650; }"
+    },
+    {
+      "name": "Night Empty Card",
+      "kind": "card",
+      "description": "Off-hours night surface with countdown, moon accent, and translucent action.",
+      "html": "<section class=\"ds-night\" aria-labelledby=\"ds-night-title\"><span class=\"ds-moon\" aria-hidden=\"true\"></span><h2 id=\"ds-night-title\" class=\"ds-night-count\">3<span>h</span> 12<span>m</span></h2><p class=\"ds-night-time\">Buses start at 7:00 PM</p><button class=\"ds-night-action\" type=\"button\">Browse stops</button></section>",
+      "css": ".ds-night { position: relative; overflow: hidden; padding: 20px 16px 18px; border-radius: 16px; background: #1C1C1E; color: #fff; font-family: -apple-system, BlinkMacSystemFont, \"SF Pro Text\", \"Helvetica Neue\", Helvetica, Arial, sans-serif; } .ds-moon { position: absolute; right: 22px; top: 18px; width: 34px; height: 34px; border-radius: 50%; background: #F4EFD6; } .ds-moon::after { content: \"\"; position: absolute; left: 10px; top: -5px; width: 34px; height: 34px; border-radius: 50%; background: #1C1C1E; } .ds-night-count { position: relative; margin: 4px 0 0; font-size: 48px; line-height: 1.05; font-weight: 700; letter-spacing: -1.4px; font-variant-numeric: tabular-nums; } .ds-night-count span { font-size: 20px; font-weight: 600; letter-spacing: normal; } .ds-night-time { position: relative; margin: 2px 0 0; font-size: 15px; color: rgba(235, 235, 245, 0.6); } .ds-night-action { position: relative; display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 44px; margin-top: 16px; padding: 10px 14px; border: none; border-radius: 12px; background: rgba(255, 255, 255, 0.12); color: #fff; font-size: 17px; font-weight: 600; text-align: left; cursor: pointer; } .ds-night-action:hover, .ds-night-action:active { background: rgba(255, 255, 255, 0.18); } .ds-night-action:focus-visible { outline: 3px solid #64D2FF; outline-offset: 2px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Campus System Glance",
+    "overview": "P2P Live\u2019s public rider app reads like an Apple system app on campus: Maps, Weather, and Find My grammar applied to next-bus timing. The first question a walking student asks\u2014when is the next ride\u2014answers in one large, tabular number on a white inset surface over iOS systemGroupedBackground. Chrome is frosted and hairline-thin; content lists are inset and grouped. Brand color is reserved: Express blue and Baity red mark routes and the P2P wordmark only. Interactive chrome speaks system blue (#007AFF), not brand blue.\n\nDensity stays phone-first and thumb-reachable. Large titles, 44\u201350px controls, and a translucent tab bar replace web-dashboard chrome. Depth comes from materials (blur + saturate) and tonal layering (grouped gray vs white inset), not from card stacks or multi-layer drop shadows on resting content.",
+    "keyCharacteristics": [
+      "iOS systemGroupedBackground (#F2F2F7) canvas with inset white lists",
+      "SF / -apple-system stack; large titles and tabular ETAs",
+      "Hairline separators; frosted nav material on header and tab bar",
+      "System tint for actions; P2P blue/red only for routes + wordmark",
+      "Glance-first next-ride surface before secondary lists or map chrome",
+      "Status ink (success/warning), urgency washes, and a night-only off-hours card"
+    ],
+    "rules": [
+      {
+        "name": "The Route Color Reserve Rule",
+        "body": "Express blue and Baity red appear only on route identity (pills, row titles, map tags) and the P2P wordmark. They never paint primary buttons, tab selection, or page chrome.",
+        "section": "colors"
+      },
+      {
+        "name": "The System Tint Rule",
+        "body": "Interactive chrome\u2014primary CTA, selected tab, back links, focus rings\u2014uses system tint (#007AFF), not Express blue.",
+        "section": "colors"
+      },
+      {
+        "name": "The Glance Number Rule",
+        "body": "The next-arrival figure is the loudest type on Home\u2014tabular, heavy, and larger than any surrounding label. Supporting copy stays secondary-label gray.",
+        "section": "typography"
+      },
+      {
+        "name": "The No Caps Chrome Rule",
+        "body": "Section labels and sheet headings stay sentence case; do not revive uppercase micro-headers.",
+        "section": "typography"
+      },
+      {
+        "name": "The One Column Phone Rule",
+        "body": "Rider surfaces stay a single centered column; desktop only widens padding, never invents sidebar chrome.",
+        "section": "layout"
+      },
+      {
+        "name": "The Flat Inset Rule",
+        "body": "Grouped lists and catch cards at rest cast no shadow\u2014depth is the gray canvas showing around white insets. Shadows belong to floating map chrome and sheets.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do open Home with frosted wordmark, status line, large next-ride surface, then one inset bus list above the translucent tab bar.",
+      "Do use system tint for CTAs, selected tabs, and focus; reserve Express/Baity for route identity and the wordmark.",
+      "Do stack white inset groups on #F2F2F7 with hairline row separators and flat resting surfaces.",
+      "Do keep ETA digits tabular and larger than surrounding labels.",
+      "Do frost floating map chips/controls; keep stroke icons light (~1.75) like SF Symbols."
+    ],
+    "donts": [
+      "Don't paint primary buttons or tab selection with Express blue or Baity red.",
+      "Don't introduce dashboard cards, dense multi-column layouts, or opaque web chrome on rider surfaces.",
+      "Don't put resting drop shadows on inset lists or catch cards.",
+      "Don't use uppercase eyebrow/kicker labels for section chrome.",
+      "Don't treat the night empty card as a global dark mode\u2014daylight grouped materials remain the system."
+    ]
+  },
+  "typography": {
+    "display": {
+      "fontSize": "56px"
+    },
+    "display-sm": {
+      "fontSize": "40px"
+    },
+    "display-night": {
+      "fontSize": "48px"
+    },
+    "headline": {
+      "fontSize": "34px"
+    },
+    "title": {
+      "fontSize": "28px"
+    },
+    "title-sm": {
+      "fontSize": "22px"
+    },
+    "section": {
+      "fontSize": "20px"
+    },
+    "body": {
+      "fontSize": "17px"
+    },
+    "callout": {
+      "fontSize": "15px"
+    },
+    "footnote": {
+      "fontSize": "13px"
+    },
+    "caption": {
+      "fontSize": "12px"
+    },
+    "micro": {
+      "fontSize": "11px"
+    },
+    "compact": {
+      "fontSize": "14px"
+    },
+    "tab-label": {
+      "fontSize": "10px"
+    }
+  },
+  "rounded": {
+    "hairline-cap": "4px",
+    "race": "2px",
+    "skel": "6px",
+    "search": "10px",
+    "control": "12px",
+    "button": "14px",
+    "inset": "16px",
+    "sheet": "20px",
+    "pill": "980px"
+  }
+}

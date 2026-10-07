@@ -91,3 +91,10 @@ export function formatETA(
   return timeStr;
 }
 
+/** Live ETA label: "Arriving" under a minute, otherwise whole minutes (floored). */
+export function formatEta(etaSec: number | null | undefined): string {
+  if (etaSec == null || !Number.isFinite(etaSec)) return '—';
+  if (etaSec < 60) return 'Arriving';
+  return `${Math.floor(etaSec / 60)} min`;
+}
+

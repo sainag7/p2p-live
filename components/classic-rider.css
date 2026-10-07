@@ -1,0 +1,133 @@
+/*
+ * Public-rider presentation rollback.
+ *
+ * Keep the current rider flows, but return their shared presentation to the
+ * earlier P2P web language: brand-led actions, regular panels, and a clear
+ * page frame. This layer deliberately avoids iOS grouped surfaces, frosted
+ * bars, oversized system typography, and sheet-like application chrome.
+ */
+.passenger-app {
+  --rider-font: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --rider-bg: #f4f7f9;
+  --rider-grouped: #eaf0f4;
+  --rider-surface: #ffffff;
+  --rider-ink: #152735;
+  --rider-secondary: #526674;
+  --rider-tertiary: #718491;
+  --rider-separator: #d7e1e7;
+  --rider-fill: #eaf0f4;
+  --rider-fill-strong: #dce8ee;
+  --rider-tint: #245e85;
+  --rider-tint-press: #1c4c6d;
+  --rider-blue: #2f73a0;
+  --rider-red: #b73230;
+  --rider-blue-tint: #e7f2fa;
+  --rider-red-tint: #fbeceb;
+  --rider-success: #3b8c6d;
+  --rider-success-ink: #32634d;
+  --rider-warning: #b87900;
+  --rider-warning-ink: #8b4e16;
+  --rider-nav-material: #ffffff;
+  --rider-search-fill: #eef2f5;
+  --rider-bar-edge: #d7e1e7;
+  --rider-radius: 10px;
+  --rider-radius-btn: 9px;
+  --rider-radius-lg: 12px;
+  --rider-radius-xl: 14px;
+  --rider-shadow: 0 4px 12px rgba(21, 39, 53, 0.08);
+  --rider-shadow-sheet: 0 -4px 20px rgba(21, 39, 53, 0.14);
+  --rider-section-gap: 24px;
+  --rider-hairline: 1px;
+}
+
+.passenger-app.is-light { --rider-bg: #f4f7f9; }
+
+/* Home and navigation keep their familiar web-panel hierarchy. */
+.passenger-app header.home-header,
+.passenger-app .home-header.compact-passenger-header {
+  min-height: 56px;
+  padding: 0 20px;
+  background: #ffffff;
+  border-bottom: 1px solid var(--rider-separator);
+  box-shadow: 0 1px 3px rgba(21, 39, 53, 0.05);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.passenger-app .home-header .home-wordmark { font-size: 20px; line-height: 56px; letter-spacing: -0.02em; }
+.passenger-app .home-content { max-width: 760px; padding: 24px 20px 40px; font-size: 16px; }
+.passenger-app .home-status-line { padding: 0 0 16px; font-size: 14px; }
+.passenger-app .home-title { margin: 0 0 14px; font-size: 28px; letter-spacing: -0.02em; }
+.passenger-app .home-catch,
+.passenger-app .home-empty-card,
+.passenger-app .home-places,
+.passenger-app .home-bus-rows,
+.passenger-app .trip-card,
+.passenger-app .trip-view .trip-rows {
+  border: 1px solid var(--rider-separator);
+  border-radius: var(--rider-radius-lg);
+  box-shadow: var(--rider-shadow);
+}
+.passenger-app .home-go strong { font-size: 46px; letter-spacing: -0.03em; }
+.passenger-app .home-go.now strong { font-size: 34px; }
+.passenger-app .home-boarding h3 { font-size: 20px; letter-spacing: -0.02em; }
+.passenger-app .home-primary,
+.passenger-app .trip-start,
+.passenger-app .trip-primary,
+.passenger-app .campus-primary {
+  min-height: 44px;
+  border-radius: var(--rider-radius-btn);
+  background: var(--rider-tint);
+}
+.passenger-app .home-primary:hover,
+.passenger-app .trip-start:hover,
+.passenger-app .trip-primary:hover,
+.passenger-app .campus-primary:hover { background: var(--rider-tint-press); }
+.passenger-app .home-search { border: 1px solid var(--rider-separator); border-radius: var(--rider-radius); background: #ffffff; }
+.passenger-app .home-place-tile { border-radius: 8px; }
+
+.passenger-app .passenger-nav {
+  height: 58px;
+  max-width: 760px;
+  margin: 0 auto;
+  border: 1px solid var(--rider-separator);
+  border-bottom: 0;
+  border-radius: 12px 12px 0 0;
+  background: #ffffff;
+  box-shadow: 0 -2px 12px rgba(21, 39, 53, 0.08);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.passenger-app .passenger-nav button { min-height: 58px; color: #526674; font-size: 12px; }
+.passenger-app .passenger-nav button[aria-current="page"] { color: var(--rider-tint); background: #eef5f9; }
+.passenger-app .passenger-nav button svg { width: 22px; height: 22px; }
+
+/* Search and map overlays are standard panels rather than native-style sheets. */
+.ss-root { --ink: #152735; --muted: #526674; --line: #d7e1e7; --field: #eef2f5; --accent: #245e85; font-family: var(--rider-font); }
+.ss-dim { background: rgba(15, 29, 41, 0.56); }
+.ss-sheet { background: #f4f7f9; }
+.ss-header { padding: 18px 20px 16px; border-bottom: 1px solid var(--line); }
+.ss-field, .ss-segment { border-radius: 9px; }
+.ss-segment-pill { border-radius: 7px; box-shadow: 0 1px 4px rgba(21, 39, 53, 0.12); }
+.ss-label { font-size: 12px; letter-spacing: 0.06em; }
+.ss-list > .ss-row { border-color: var(--line); border-radius: 10px; }
+.passenger-app.is-behind-sheet { transform: none; border-radius: 0; }
+html.has-search-sheet, html.has-search-sheet body { background: #0f1d29; }
+
+.passenger-app .campus-map { font-family: var(--rider-font); }
+.passenger-app .campus-chip,
+.passenger-app .campus-control,
+.passenger-app .campus-options,
+.passenger-app .campus-sheet {
+  border: 1px solid var(--rider-separator);
+  background: #ffffff;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.passenger-app .campus-sheet { border-radius: var(--rider-radius-xl); }
+.passenger-app .bus-detail-sheet { border: 1px solid var(--rider-separator); border-bottom: 0; border-radius: var(--rider-radius-xl) var(--rider-radius-xl) 0 0; }
+
+@media (min-width: 768px) {
+  .passenger-app .home-content { padding-inline: 28px; }
+  .passenger-app header.home-header,
+  .passenger-app .home-header.compact-passenger-header { padding-inline: 28px; }
+}

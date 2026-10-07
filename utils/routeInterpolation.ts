@@ -29,7 +29,7 @@ function cumulativeDistances(coords: LngLat[]): number[] {
 }
 
 /** Bearing in degrees (0 = north, 90 = east) between two points. */
-function bearing(a: LngLat, b: LngLat): number {
+export function bearingBetween(a: LngLat, b: LngLat): number {
   const dLon = ((b[0] - a[0]) * Math.PI) / 180;
   const lat1 = (a[1] * Math.PI) / 180;
   const lat2 = (b[1] * Math.PI) / 180;
@@ -68,6 +68,15 @@ export function createRouteInterpolator(coords: LngLat[]): RouteInterpolator | n
   }
   const { cumul, coords: c } = entry;
   const totalLengthMeters = cumul[cumul.length - 1];
+  /** Index of the first segment ending at or past `d` (binary search; called every animation frame). */
+  const segmentAt = (d: number) => {
+    let lo = 0, hi = cumul.length - 2;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if (cumul[mid + 1] < d) lo = mid + 1; else hi = mid;
+    }
+    return lo;
+  };
 
   return {
     totalLengthMeters,
@@ -76,8 +85,7 @@ export function createRouteInterpolator(coords: LngLat[]): RouteInterpolator | n
       if (d < 0) d += totalLengthMeters;
       if (d <= 0) return c[0];
       if (d >= totalLengthMeters) return c[c.length - 1];
-      let i = 0;
-      while (i < cumul.length - 1 && cumul[i + 1] < d) i++;
+      const i = segmentAt(d);
       const t = (d - cumul[i]) / (cumul[i + 1] - cumul[i]);
       return [
         c[i][0] + t * (c[i + 1][0] - c[i][0]),
@@ -87,11 +95,10 @@ export function createRouteInterpolator(coords: LngLat[]): RouteInterpolator | n
     bearingAt(distMeters: number): number {
       let d = distMeters % totalLengthMeters;
       if (d < 0) d += totalLengthMeters;
-      if (d <= 0) return bearing(c[0], c[1]);
-      if (d >= totalLengthMeters) return bearing(c[c.length - 2], c[c.length - 1]);
-      let i = 0;
-      while (i < cumul.length - 1 && cumul[i + 1] < d) i++;
-      return bearing(c[i], c[i + 1]);
+      if (d <= 0) return bearingBetween(c[0], c[1]);
+      if (d >= totalLengthMeters) return bearingBetween(c[c.length - 2], c[c.length - 1]);
+      const i = segmentAt(d);
+      return bearingBetween(c[i], c[i + 1]);
     },
   };
 }

@@ -1,57 +1,48 @@
 import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
-import { ViewState, Vehicle, Stop, Coordinate, Journey } from './types';
-import { STOPS, VEHICLES } from './data/mockTransit';
-import { findNearestStop, getDistanceMiles, UNC_CAMPUS_CENTER, SERVICE_RADIUS_MILES } from './utils/geo';
+import { flushSync } from 'react-dom';
+import { ViewState, Stop, Coordinate, Journey, Destination } from './types';
+import { getDistanceMiles, UNC_CAMPUS_CENTER, SERVICE_RADIUS_MILES } from './utils/geo';
 import { BottomNav } from './components/BottomNav';
-import { ClosestStopCard } from './components/ClosestStopCard';
-import { BusList } from './components/BusList';
+import { HomeView } from './components/HomeView';
 import { BusDetailSheet } from './components/BusDetailSheet';
 import { MapView } from './components/MapView';
-import { PlanTripView } from './components/PlanTripView';
+import { SearchSheet, type SearchSheetRequest } from './components/SearchSheet';
 import { AppHeader } from './components/AppHeader';
-import { RefreshCw, X } from 'lucide-react';
+import { X } from 'lucide-react';
+import { useTransit } from './context/TransitProvider';
+import { getStarredPlaces, toggleStarredPlace } from './storage/starredPlaces';
+import { eligibleCampusLocation } from './utils/mapPresentation';
+import './components/passenger.css';
+import './components/classic-rider.css';
+import { ServiceMessageBanner } from './components/ServiceMessageBanner';
+import { useLiveLocation } from './hooks/useLiveLocation';
 
 // Default to UNC Student Union if geo denied
 const DEFAULT_LOCATION: Coordinate = { lat: 35.9105, lon: -79.0478 };
 
 function App() {
   const [view, setView] = useState<ViewState>('list');
-  const [userLocation, setUserLocation] = useState<Coordinate>(DEFAULT_LOCATION);
-  const [selectedBus, setSelectedBus] = useState<Vehicle | null>(null);
+  const [mapVisited, setMapVisited] = useState(false);
+  useEffect(() => { if (view === 'map') setMapVisited(true); }, [view]);
+  // Follows the rider as they move while the site is open (falls back to the Union if denied).
+  const { location: userLocation, resolved: geoResolved, loading: loadingLoc } = useLiveLocation(DEFAULT_LOCATION);
+  const [selectedBusId, setSelectedBusId] = useState<string | null>(null);
   const [selectedStop, setSelectedStop] = useState<Stop | null>(null);
   const [activeJourney, setActiveJourney] = useState<Journey | null>(null);
-  const [loadingLoc, setLoadingLoc] = useState(true);
-  const [geoResolved, setGeoResolved] = useState(false); // true only when getCurrentPosition succeeds
+  const [searchRequest, setSearchRequest] = useState<SearchSheetRequest | null>(null);
+  const [behindSheet, setBehindSheet] = useState(false);
+  const [starred, setStarred] = useState<Destination[]>(() => getStarredPlaces());
+  const appRoot = useRef<HTMLDivElement>(null);
+  const searchOpener = useRef<HTMLElement | null>(null);
   const [outsideAreaMiles, setOutsideAreaMiles] = useState<number | null>(null);
   const [warningDismissed, setWarningDismissed] = useState(false);
   const [centerOnCampusAt, setCenterOnCampusAt] = useState<number | null>(null);
   const computedOutsideAreaRef = useRef(false);
-  const [vehicles, setVehicles] = useState<Vehicle[]>(VEHICLES);
-  const [refreshLoading, setRefreshLoading] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState<number | null>(null);
-
-  // Geolocation Setup
-  useEffect(() => {
-    if ('geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation({
-            lat: position.coords.latitude,
-            lon: position.coords.longitude,
-          });
-          setGeoResolved(true);
-          setLoadingLoc(false);
-        },
-        () => {
-          setLoadingLoc(false);
-        },
-        { enableHighAccuracy: true }
-      );
-    } else {
-      setLoadingLoc(false);
-    }
-  }, []);
-
+  const noticesRef = useRef<HTMLDivElement>(null);
+  const [noticeHeight, setNoticeHeight] = useState(0);
+  const { network, vehicles } = useTransit();
+  const selectedBus = useMemo(() => vehicles.find((v) => v.id === selectedBusId) ?? null, [vehicles, selectedBusId]);
+  const networkStops = useMemo(() => network?.stops ?? [], [network]);
   // Distance warning dismissal persistence (session-scoped)
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -75,28 +66,37 @@ function App() {
     }
   }, [loadingLoc, geoResolved, userLocation]);
 
-  // Derived State
-  const closestStop = useMemo(() => findNearestStop(userLocation, STOPS), [userLocation]);
+  useEffect(() => {
+    const node = noticesRef.current;
+    if (!node) return;
+    const measure = () => setNoticeHeight(node.getBoundingClientRect().height);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [view]);
 
-  const handlePlanRoute = (journey: Journey) => {
-    setActiveJourney(journey);
-  };
-
-  const handleViewOnMap = () => {
-    setView('map');
-  };
-
-  const handleRefreshEtas = useCallback(async () => {
-    setRefreshLoading(true);
-    try {
-      // TODO: replace with real API when available, e.g. fetch('/api/vehicles/etas')
-      await new Promise((r) => setTimeout(r, 800));
-      setVehicles((prev) => [...prev]);
-      setLastUpdated(Date.now());
-    } finally {
-      setRefreshLoading(false);
-    }
+  // Mount the sheet inside the tap itself so it can focus its field and phones raise the keyboard.
+  const openSearch = useCallback((from: HTMLElement, place?: Destination) => {
+    searchOpener.current = from;
+    flushSync(() => setSearchRequest({ origin: from.getBoundingClientRect(), label: place ? place.name : 'Search a building or stop', place }));
   }, []);
+
+  const closeSearch = useCallback(() => {
+    setSearchRequest(null);
+    setBehindSheet(false);
+    // Inert elements can't take focus, so lift it now rather than waiting for the effect.
+    appRoot.current?.removeAttribute('inert');
+    if (searchOpener.current?.isConnected) searchOpener.current.focus({ preventScroll: true });
+    searchOpener.current = null;
+  }, []);
+
+  // While the sheet is up, the app behind is inert and the page edges show the dark backdrop.
+  useEffect(() => {
+    const open = searchRequest != null;
+    appRoot.current?.toggleAttribute('inert', open);
+    document.documentElement.classList.toggle('has-search-sheet', open);
+  }, [searchRequest]);
 
   const dismissDistanceWarning = useCallback(() => {
     setWarningDismissed(true);
@@ -110,30 +110,30 @@ function App() {
   }, []);
 
   return (
-    <div className="min-h-[100dvh] h-full w-full flex flex-col bg-gray-50 relative">
-      <AppHeader loadingLoc={loadingLoc} />
+    <>
+    <div ref={appRoot} className={`passenger-app ${view !== 'map' ? 'is-light' : ''} ${behindSheet ? 'is-behind-sheet' : ''} min-h-[100dvh] h-full w-full flex flex-col relative`} style={{ background: view === 'map' ? undefined : 'var(--rider-bg)' }}>
+      <AppHeader loadingLoc={loadingLoc} compact={view === 'map'} home />
 
       {/* Main Content Area: flex-1 min-h-0 so list can scroll */}
-      <main className="flex-1 min-h-0 flex flex-col relative">
+      <main className={`flex-1 min-h-0 flex flex-col relative ${view === 'list' ? 'home-main' : ''}`}>
         {/* Outside service area notice (informational only) */}
-        {outsideAreaMiles != null && outsideAreaMiles > SERVICE_RADIUS_MILES && !warningDismissed && (
-          <div className="pointer-events-none absolute inset-x-0 top-2 z-30 flex justify-center px-4">
-            <div className="pointer-events-auto w-full max-w-md rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 shadow-sm relative">
+        <div ref={noticesRef} className={view === 'list' ? 'home-notices' : 'pointer-events-none absolute inset-x-0 top-2 z-30 flex flex-col items-center gap-2 px-4 max-h-[30dvh] overflow-y-auto'}>
+          <ServiceMessageBanner />
+          {outsideAreaMiles != null && outsideAreaMiles > SERVICE_RADIUS_MILES && !warningDismissed && (
+            <div className="rider-banner is-warning pointer-events-auto">
               <button
                 type="button"
                 onClick={dismissDistanceWarning}
-                className="absolute right-2 top-2 inline-flex items-center justify-center rounded-full p-1.5 text-amber-700 hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                className="rider-banner-dismiss"
                 aria-label="Dismiss distance warning"
               >
                 <X size={14} />
               </button>
-              <p className="text-sm font-medium text-amber-900 pr-6">
-                You appear to be{' '}
-                <strong>{Math.round(outsideAreaMiles)} miles from UNC Chapel Hill</strong>. P2P Live is designed
-                for use on or near campus.
+              <p className="rider-banner-title">
+                You’re about {Math.round(outsideAreaMiles)} miles from UNC Chapel Hill
               </p>
-              <p className="text-xs text-amber-800/90 mt-1 pr-6">
-                You can still explore routes, but live bus tracking may not be relevant at your current location.
+              <p className="rider-banner-body">
+                P2P Live is meant for campus. You can still explore routes, but live tracking may not match where you are.
               </p>
               <button
                 type="button"
@@ -142,109 +142,70 @@ function App() {
                   setView('map');
                   setCenterOnCampusAt(Date.now());
                 }}
-                className="mt-3 inline-flex items-center justify-center px-3 py-2 rounded-lg bg-amber-200/80 text-amber-900 text-sm font-semibold hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                className="rider-banner-action"
               >
                 Center Map on UNC
               </button>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
-        {view === 'list' && (
-          <div
-            className="flex-1 min-h-0 overflow-y-auto no-scrollbar pb-20"
-            style={{ WebkitOverflowScrolling: 'touch' }}
-          >
-            {/* Closest Stop section: same horizontal padding as Active Buses */}
-            {closestStop && (
-              <div className="px-4 pt-4 pb-2">
-                <h2 className="text-gray-900 font-bold text-lg mb-1">Closest Stop to You</h2>
-                <ClosestStopCard 
-                  stop={closestStop} 
-                  userLocation={userLocation} 
-                  vehicles={vehicles}
-                />
-              </div>
-            )}
-            {/* Active Buses section: aligned padding */}
-            <div className="px-4 pt-6 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <h2 className="text-gray-900 font-bold text-lg">Active Buses</h2>
-                {lastUpdated != null && (
-                  <span className="text-xs text-gray-400">
-                    Updated {lastUpdated > Date.now() - 60000 ? 'just now' : new Date(lastUpdated).toLocaleTimeString()}
-                  </span>
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={handleRefreshEtas}
-                disabled={refreshLoading}
-                className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-p2p-light-blue/50 text-p2p-blue text-sm font-semibold hover:bg-p2p-light-blue/70 disabled:opacity-60 disabled:pointer-events-none"
-                aria-label="Refresh ETAs"
-              >
-                <RefreshCw size={18} className={refreshLoading ? 'animate-spin' : ''} />
-                Refresh
-              </button>
-            </div>
-            <BusList 
-              vehicles={vehicles} 
-              stops={STOPS} 
-              onSelectBus={(bus) => setSelectedBus(bus)}
-            />
-          </div>
-        )}
+        {view === 'list' && <HomeView location={userLocation} locationResolved={geoResolved} loadingLocation={loadingLoc}
+          starred={starred} onOpenSearch={openSearch}
+          onSelectBus={bus => { setSelectedStop(null); setActiveJourney(null); setSelectedBusId(bus.id); }}
+          onSelectStop={stop => { setSelectedBusId(null); setActiveJourney(null); setSelectedStop(stop); setView('map'); }}
+          onBrowseMap={() => { setSelectedBusId(null); setSelectedStop(null); setActiveJourney(null); setCenterOnCampusAt(Date.now()); setView('map'); }} />}
 
-        {view === 'plan' && (
-          <div
-            className="flex-1 min-h-0 overflow-y-auto no-scrollbar pb-20"
-            style={{ WebkitOverflowScrolling: 'touch' }}
-          >
-            <PlanTripView 
-              userLocation={userLocation}
-              onPlanRoute={handlePlanRoute}
-              onViewOnMap={handleViewOnMap}
-              existingJourney={activeJourney}
-            />
-          </div>
-        )}
-        
-        {view === 'map' && (
-          <div className="h-full w-full relative">
-            <MapView 
-              stops={STOPS}
+        {(view === 'map' || mapVisited) && (
+          <div hidden={view !== 'map'} className="h-full w-full relative pb-[calc(49px+env(safe-area-inset-bottom))]">
+            <MapView
+              active={view === 'map'}
               vehicles={vehicles}
               userLocation={userLocation}
-              userLocationResolved={!loadingLoc}
+              userLocationResolved={geoResolved}
               centerOnCampusAt={centerOnCampusAt}
+              topInset={noticeHeight > 0 ? noticeHeight + 8 : 0}
+              busDetailsOpen={selectedBus != null}
               onSelectBus={(bus) => {
-                setSelectedBus(bus);
+                setSelectedBusId(bus.id);
                 setSelectedStop(null);
+                setActiveJourney(null);
               }}
               onSelectStop={(stop) => {
-                setSelectedStop((prev) => (prev?.id === stop.id ? null : stop));
+                setSelectedBusId(null);
+                setActiveJourney(null);
+                setSelectedStop(stop);
               }}
               onDismissStop={() => setSelectedStop(null)}
               selectedStop={selectedStop}
               activeJourney={activeJourney}
               onClearJourney={() => setActiveJourney(null)}
               onStartWalkToStop={(journey) => setActiveJourney(journey)}
-              onViewList={() => { setView('list'); setSelectedStop(null); }}
             />
           </div>
         )}
       </main>
 
       {/* Shared Overlays */}
-      <BusDetailSheet 
-        vehicle={selectedBus} 
-        stops={STOPS}
-        userLocation={userLocation}
-        onClose={() => setSelectedBus(null)} 
-      />
+      {selectedBus && (
+        <BusDetailSheet
+          vehicle={selectedBus}
+          stops={networkStops}
+          userLocation={geoResolved && outsideAreaMiles == null ? userLocation : null}
+          onClose={() => setSelectedBusId(null)}
+        />
+      )}
 
       <BottomNav currentView={view} onChangeView={setView} />
     </div>
+    {searchRequest && <SearchSheet request={searchRequest} location={userLocation}
+      locationKnown={eligibleCampusLocation(userLocation, geoResolved) != null}
+      starred={starred} onToggleStar={place => setStarred(toggleStarredPlace(place))}
+      onBehindChange={setBehindSheet}
+      onSelectStop={stop => { searchOpener.current = null; setSelectedBusId(null); setActiveJourney(null); setSelectedStop(stop); setView('map'); }}
+      onStartTrip={journey => { searchOpener.current = null; setSelectedBusId(null); setSelectedStop(null); setActiveJourney(journey); setView('map'); }}
+      onClosed={closeSearch} />}
+    </>
   );
 }
 

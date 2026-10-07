@@ -4,55 +4,21 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>P2P Live - UNC Transit</title>
-    <link rel="icon" type="image/x-icon" href="/assets/p2p-favicon-new.png">
+    <link rel="icon" type="image/png" sizes="48x48" href="/icons/favicon.png">
     <meta property="og:image" content="/assets/p2p-thumbnail-prev.png" />
     <meta property="og:title" content="P2P Live - UNC Transit">
     <meta property="og:description" content="UNC's P2P transit tracking site." />
     <meta property="og:url" content="https://p2pnow.netlify.app/">
-    <script src="https://cdn.tailwindcss.com"></script>
-     <style>
-       /* Custom scrollbar hide for cleaner UI */
-       .no-scrollbar::-webkit-scrollbar {
-         display: none;
-       }
-       .no-scrollbar {
-         -ms-overflow-style: none;
-         scrollbar-width: none;
-       }
-     </style>
-     <script>
-       tailwind.config = {
-         theme: {
-           extend: {
-             colors: {
-               p2p: {
-                 blue: '#418FC5',
-                 red: '#C33934',
-                 black: '#000000',
-                 bg: '#FFFFFF',
-                 'light-blue': '#B4D4E9',
-                 'light-red': '#ECBCBA',
-               }
-             }
-           }
-         }
-       }
-     </script>
-  <script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@18.2.0",
-    "react/": "https://esm.sh/react@18.2.0/",
-    "react-dom": "https://esm.sh/react-dom@18.2.0",
-    "react-dom/": "https://esm.sh/react-dom@18.2.0/",
-    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
-    "lucide-react": "https://esm.sh/lucide-react@0.294.0"
-  }
-}
-</script>
-<link rel="stylesheet" href="/index.css">
 </head>
-  <body class="bg-gray-50 text-slate-800 antialiased overflow-hidden">
+  <body class="bg-[#f2f2f7] text-black antialiased overflow-hidden">
+    <!--
+      THESIS: Glanceable next-bus like Apple Maps/Weather — large titles, grouped lists, system materials; refuse web-dashboard chrome.
+      OWN-WORLD: iOS systemGroupedBackground (#F2F2F7), inset white lists, SF stack, hairline separators, frosted tab bar, system blue tint; P2P blue/red only for routes and wordmark.
+      STORY: Student opens to next-ride timing, walks to the stop or plans a trip, trusts live campus map chrome.
+      FIRST VIEWPORT: Frosted P2P Live wordmark, status line, large next-ride surface, inset bus list, translucent tab bar.
+      FORM: Apple iOS system apps (Maps / Weather / Find My); user-pinned-canon
+      FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md
+    -->
     <div id="root" class="h-[100dvh] w-full relative"></div>
   <script type="module" src="/index.tsx"></script>
 </body>

@@ -1,0 +1,801 @@
+{
+  "date": "2026-10-05",
+  "conditions": {
+    "viewport": "390x844",
+    "app": "current uncommitted production build on codex/mobile-performance",
+    "localBackend": "synthetic campus fixtures; 150 ms per API request; fixed clock/location; no real Mapbox token",
+    "UI": "DOM readiness and finite animation completion sampled by requestAnimationFrame; animation completion can include decorative motion and does not imply blocked interaction",
+    "publicAPI": "Three read-only deployed network/snapshot request pairs, at least six seconds apart; request+response-body wall time from this machine; not a guaranteed hosting cold start"
+  },
+  "medianMilliseconds": {
+    "Home bus data DOM": 193.5,
+    "Search DOM": 5.4,
+    "Search animations settled": 344.9,
+    "First address results DOM": 440.8,
+    "Repeated address results DOM": 444.7,
+    "Trip results DOM": 313.3,
+    "Trip animations settled": 1521.1,
+    "Close search": 228.1,
+    "First map module": 62.5,
+    "Repeated map module": 4.6,
+    "Bus details": 11.8,
+    "Browse stops": 12.1,
+    "Map options": 12.2,
+    "Refresh complete": 167.8
+  },
+  "confirmedRuns": [
+    {
+      "diagnostics": {
+        "events": [
+          {
+            "action": "Home bus data",
+            "stage": "DOM ready",
+            "ms": 193.5
+          },
+          {
+            "action": "Home bus data",
+            "stage": "Animation settled",
+            "ms": 194.4
+          },
+          {
+            "action": "Search",
+            "stage": "DOM ready",
+            "ms": 5.4
+          },
+          {
+            "action": "Search",
+            "stage": "Animation settled",
+            "ms": 344.9
+          },
+          {
+            "action": "Address search complete",
+            "stage": "DOM ready",
+            "ms": 438.8
+          },
+          {
+            "action": "Address search complete",
+            "stage": "Animation settled",
+            "ms": 814.1
+          },
+          {
+            "action": "Address search complete",
+            "stage": "DOM ready",
+            "ms": 439.4
+          },
+          {
+            "action": "Address search complete",
+            "stage": "Animation settled",
+            "ms": 713.4
+          },
+          {
+            "action": "Trip planning",
+            "stage": "DOM ready",
+            "ms": 313.3
+          },
+          {
+            "action": "Trip planning",
+            "stage": "Animation settled",
+            "ms": 1521.5
+          },
+          {
+            "action": "Close search",
+            "stage": "DOM ready",
+            "ms": 228.1
+          },
+          {
+            "action": "Close search",
+            "stage": "Animation settled",
+            "ms": 228.2
+          },
+          {
+            "action": "Map renderer module",
+            "stage": "DOM ready",
+            "ms": 62.5
+          },
+          {
+            "action": "Map renderer module",
+            "stage": "Animation settled",
+            "ms": 62.6
+          },
+          {
+            "action": "Map renderer module",
+            "stage": "DOM ready",
+            "ms": 5.8
+          },
+          {
+            "action": "Map renderer module",
+            "stage": "Animation settled",
+            "ms": 5.8
+          }
+        ],
+        "requests": [
+          {
+            "pathname": "/api/live/network",
+            "startMs": 33.5,
+            "ms": 155,
+            "status": 200
+          },
+          {
+            "pathname": "/api/live/snapshot",
+            "startMs": 33.6,
+            "ms": 155.1,
+            "status": 200
+          },
+          {
+            "pathname": "/api/mapbox/geocode",
+            "startMs": 919.9,
+            "ms": 152.3,
+            "status": 200
+          },
+          {
+            "pathname": "/api/mapbox/geocode",
+            "startMs": 1728.1,
+            "ms": 154.9,
+            "status": 200
+          },
+          {
+            "pathname": "/api/mapbox/directions/walk",
+            "startMs": 2189.8,
+            "ms": 152.9,
+            "status": 200
+          },
+          {
+            "pathname": "/api/mapbox/directions/walk",
+            "startMs": 2189.9,
+            "ms": 153.1,
+            "status": 200
+          },
+          {
+            "pathname": "/api/mapbox/directions/walk",
+            "startMs": 2189.9,
+            "ms": 153.2,
+            "status": 200
+          },
+          {
+            "pathname": "/api/mapbox/directions/walk",
+            "startMs": 2189.9,
+            "ms": 153.3,
+            "status": 200
+          },
+          {
+            "pathname": "/api/mapbox/directions/walk",
+            "startMs": 2343.5,
+            "ms": 152.7,
+            "status": 200
+          },
+          {
+            "pathname": "/api/mapbox/directions/walk",
+            "startMs": 2343.6,
+            "ms": 152.9,
+            "status": 200
+          },
+          {
+            "pathname": "/assets/MapboxMap-n1pgiqlU.css",
+            "ms": 4.6,
+            "transferBytes": 5765
+          },
+          {
+            "pathname": "/assets/MapboxMap-hIlrH0Tp.js",
+            "ms": 37.9,
+            "transferBytes": 469883
+          }
+        ],
+        "longTasks": []
+      },
+      "interactions": [
+        {
+          "action": "Home ready",
+          "ms": 201.9
+        },
+        {
+          "action": "Search open",
+          "ms": 11.7
+        },
+        {
+          "action": "Trip results",
+          "ms": 321.6
+        },
+        {
+          "action": "Map open",
+          "ms": 12.6
+        },
+        {
+          "action": "Home return",
+          "ms": 12.7
+        },
+        {
+          "action": "Map open",
+          "ms": 13.9
+        }
+      ]
+    },
+    {
+      "diagnostics": {
+        "events": [
+          {
+            "action": "Home bus data",
+            "stage": "DOM ready",
+            "ms": 207.2
+          },
+          {
+            "action": "Home bus data",
+            "stage": "Animation settled",
+            "ms": 207.9
+          },
+          {
+            "action": "Search",
+            "stage": "DOM ready",
+            "ms": 4.9
+          },
+          {
+            "action": "Search",
+            "stage": "Animation settled",
+            "ms": 379
+          },
+          {
+            "action": "Address search complete",
+            "stage": "DOM ready",
+            "ms": 443.1
+          },
+          {
+            "action": "Address search complete",
+            "stage": "Animation settled",
+            "ms": 809.1
+          },
+          {
+            "action": "Address search complete",
+            "stage": "DOM ready",
+            "ms": 447.1
+          },
+          {
+            "action": "Address search complete",
+            "stage": "Animation settled",
+            "ms": 720.6
+          },
+          {
+            "action": "Trip planning",
+            "stage": "DOM ready",
+            "ms": 315.7
+          },
+          {
+            "action": "Trip planning",
+            "stage": "Animation settled",
+            "ms": 1521.1
+          },
+          {
+            "action": "Close search",
+            "stage": "DOM ready",
+            "ms": 227.1
+          },
+          {
+            "action": "Close search",
+            "stage": "Animation settled",
+            "ms": 227.2
+          },
+          {
+            "action": "Map renderer module",
+            "stage": "DOM ready",
+            "ms": 70.7
+          },
+          {
+            "action": "Map renderer module",
+            "stage": "Animation settled",
+            "ms": 70.8
+          },
+          {
+            "action": "Map renderer module",
+            "stage": "DOM ready",
+            "ms": 4.6
+          },
+          {
+            "action": "Map renderer module",
+            "stage": "Animation settled",
+            "ms": 4.6
+          }
+        ],
+        "requests": [
+          {
+            "pathname": "/api/live/network",
+            "startMs": 47.6,
+            "ms": 154.1,
+            "status": 200
+          },
+          {
+            "pathname": "/api/live/snapshot",
+            "startMs": 47.8,
+            "ms": 154,
+            "status": 200
+          },
+          {
+            "pathname": "/api/mapbox/geocode",
+            "startMs": 1079.1,
+            "ms": 152.8,
+            "status": 200
+          },
+          {
+            "pathname": "/api/mapbox/geocode",
+            "startMs": 1884.4,
+            "ms": 157.5,
+            "status": 200
+          },
+          {
+            "pathname": "/api/mapbox/directions/walk",
+            "startMs": 2354.2,
+            "ms": 154.4,
+            "status": 200
+          },
+          {
+            "pathname": "/api/mapbox/directions/walk",
+            "startMs": 2354.3,
+            "ms": 154.5,
+            "status": 200
+          },
+          {
+            "pathname": "/api/mapbox/directions/walk",
+            "startMs": 2354.3,
+            "ms": 155.1,
+            "status": 200
+          },
+          {
+            "pathname": "/api/mapbox/directions/walk",
+            "startMs": 2354.3,
+            "ms": 155.4,
+            "status": 200
+          },
+          {
+            "pathname": "/api/mapbox/directions/walk",
+            "startMs": 2509.9,
+            "ms": 153.5,
+            "status": 200
+          },
+          {
+            "pathname": "/api/mapbox/directions/walk",
+            "startMs": 2510.1,
+            "ms": 153.5,
+            "status": 200
+          },
+          {
+            "pathname": "/assets/MapboxMap-n1pgiqlU.css",
+            "ms": 17,
+            "transferBytes": 5765
+          },
+          {
+            "pathname": "/assets/MapboxMap-hIlrH0Tp.js",
+            "ms": 44.3,
+            "transferBytes": 469883
+          }
+        ],
+        "longTasks": []
+      },
+      "interactions": [
+        {
+          "action": "Home ready",
+          "ms": 215.6
+        },
+        {
+          "action": "Search open",
+          "ms": 12
+        },
+        {
+          "action": "Trip results",
+          "ms": 321
+        },
+        {
+          "action": "Map open",
+          "ms": 12
+        },
+        {
+          "action": "Home return",
+          "ms": 12.8
+        },
+        {
+          "action": "Map open",
+          "ms": 13.9
+        }
+      ]
+    },
+    {
+      "diagnostics": {
+        "events": [
+          {
+            "action": "Home bus data",
+            "stage": "DOM ready",
+            "ms": 191.1
+          },
+          {
+            "action": "Home bus data",
+            "stage": "Animation settled",
+            "ms": 191.9
+          },
+          {
+            "action": "Search",
+            "stage": "DOM ready",
+            "ms": 5.8
+          },
+          {
+            "action": "Search",
+            "stage": "Animation settled",
+            "ms": 344.7
+          },
+          {
+            "action": "Address search complete",
+            "stage": "DOM ready",
+            "ms": 440.8
+          },
+          {
+            "action": "Address search complete",
+            "stage": "Animation settled",
+            "ms": 707.5
+          },
+          {
+            "action": "Address search complete",
+            "stage": "DOM ready",
+            "ms": 444.7
+          },
+          {
+            "action": "Address search complete",
+            "stage": "Animation settled",
+            "ms": 910
+          },
+          {
+            "action": "Trip planning",
+            "stage": "DOM ready",
+            "ms": 313.3
+          },
+          {
+            "action": "Trip planning",
+            "stage": "Animation settled",
+            "ms": 1519.4
+          },
+          {
+            "action": "Close search",
+            "stage": "DOM ready",
+            "ms": 229.4
+          },
+          {
+            "action": "Close search",
+            "stage": "Animation settled",
+            "ms": 229.5
+          },
+          {
+            "action": "Map renderer module",
+            "stage": "DOM ready",
+            "ms": 61.4
+          },
+          {
+            "action": "Map renderer module",
+            "stage": "Animation settled",
+            "ms": 61.5
+          },
+          {
+            "action": "Map renderer module",
+            "stage": "DOM ready",
+            "ms": 3.5
+          },
+          {
+            "action": "Map renderer module",
+            "stage": "Animation settled",
+            "ms": 3.5
+          }
+        ],
+        "requests": [
+          {
+            "pathname": "/api/live/network",
+            "startMs": 34.7,
+            "ms": 152.7,
+            "status": 200
+          },
+          {
+            "pathname": "/api/live/snapshot",
+            "startMs": 34.9,
+            "ms": 152.8,
+            "status": 200
+          },
+          {
+            "pathname": "/api/mapbox/geocode",
+            "startMs": 1116.5,
+            "ms": 152.3,
+            "status": 200
+          },
+          {
+            "pathname": "/api/mapbox/geocode",
+            "startMs": 1820.9,
+            "ms": 157,
+            "status": 200
+          },
+          {
+            "pathname": "/api/mapbox/directions/walk",
+            "startMs": 2205.6,
+            "ms": 153.5,
+            "status": 200
+          },
+          {
+            "pathname": "/api/mapbox/directions/walk",
+            "startMs": 2205.7,
+            "ms": 154.6,
+            "status": 200
+          },
+          {
+            "pathname": "/api/mapbox/directions/walk",
+            "startMs": 2205.8,
+            "ms": 155.8,
+            "status": 200
+          },
+          {
+            "pathname": "/api/mapbox/directions/walk",
+            "startMs": 2205.8,
+            "ms": 155.9,
+            "status": 200
+          },
+          {
+            "pathname": "/api/mapbox/directions/walk",
+            "startMs": 2362.1,
+            "ms": 153.1,
+            "status": 200
+          },
+          {
+            "pathname": "/api/mapbox/directions/walk",
+            "startMs": 2362.2,
+            "ms": 153,
+            "status": 200
+          },
+          {
+            "pathname": "/assets/MapboxMap-n1pgiqlU.css",
+            "ms": 2.4,
+            "transferBytes": 5765
+          },
+          {
+            "pathname": "/assets/MapboxMap-hIlrH0Tp.js",
+            "ms": 33.5,
+            "transferBytes": 469883
+          }
+        ],
+        "longTasks": []
+      },
+      "interactions": [
+        {
+          "action": "Home ready",
+          "ms": 199.5
+        },
+        {
+          "action": "Search open",
+          "ms": 11.4
+        },
+        {
+          "action": "Trip results",
+          "ms": 320.2
+        },
+        {
+          "action": "Map open",
+          "ms": 12.2
+        },
+        {
+          "action": "Home return",
+          "ms": 12.2
+        },
+        {
+          "action": "Map open",
+          "ms": 11.9
+        }
+      ]
+    }
+  ],
+  "broaderFlowInteractions": [
+    [
+      {
+        "action": "Home ready",
+        "ms": 243
+      },
+      {
+        "action": "Search open",
+        "ms": 8.9
+      },
+      {
+        "action": "Trip results",
+        "ms": 320.4
+      },
+      {
+        "action": "Map open",
+        "ms": 11.8
+      },
+      {
+        "action": "Map options",
+        "ms": 11.8
+      },
+      {
+        "action": "Browse stops",
+        "ms": 12
+      },
+      {
+        "action": "Home return",
+        "ms": 11.4
+      },
+      {
+        "action": "Refresh complete",
+        "ms": 170.3
+      },
+      {
+        "action": "Bus details",
+        "ms": 11.8
+      },
+      {
+        "action": "Map open",
+        "ms": 7.8
+      },
+      {
+        "action": "Home return",
+        "ms": 10.5
+      }
+    ],
+    [
+      {
+        "action": "Home ready",
+        "ms": 222.8
+      },
+      {
+        "action": "Search open",
+        "ms": 11.7
+      },
+      {
+        "action": "Trip results",
+        "ms": 328.9
+      },
+      {
+        "action": "Map open",
+        "ms": 11.8
+      },
+      {
+        "action": "Map options",
+        "ms": 12.2
+      },
+      {
+        "action": "Browse stops",
+        "ms": 12.8
+      },
+      {
+        "action": "Home return",
+        "ms": 12.1
+      },
+      {
+        "action": "Refresh complete",
+        "ms": 167.8
+      },
+      {
+        "action": "Bus details",
+        "ms": 11.9
+      },
+      {
+        "action": "Map open",
+        "ms": 9.1
+      },
+      {
+        "action": "Home return",
+        "ms": 11.5
+      }
+    ],
+    [
+      {
+        "action": "Home ready",
+        "ms": 201
+      },
+      {
+        "action": "Search open",
+        "ms": 12.9
+      },
+      {
+        "action": "Trip results",
+        "ms": 327.6
+      },
+      {
+        "action": "Map open",
+        "ms": 11.8
+      },
+      {
+        "action": "Map options",
+        "ms": 12.5
+      },
+      {
+        "action": "Browse stops",
+        "ms": 12.1
+      },
+      {
+        "action": "Home return",
+        "ms": 12.5
+      },
+      {
+        "action": "Refresh complete",
+        "ms": 166
+      },
+      {
+        "action": "Bus details",
+        "ms": 11.5
+      },
+      {
+        "action": "Map open",
+        "ms": 10.2
+      },
+      {
+        "action": "Home return",
+        "ms": 13.1
+      }
+    ]
+  ],
+  "publicApi": {
+    "url": "https://p2pnow.netlify.app",
+    "runs": [
+      {
+        "network": {
+          "ms": 275.8,
+          "status": 200,
+          "bytes": 59006,
+          "cacheControl": "public,max-age=300",
+          "liveStatus": null,
+          "routes": 2,
+          "vehicles": 0
+        },
+        "snapshot": {
+          "ms": 1913.0,
+          "status": 200,
+          "bytes": 471,
+          "cacheControl": "no-store",
+          "liveStatus": "live",
+          "routes": 0,
+          "vehicles": 1
+        }
+      },
+      {
+        "network": {
+          "ms": 259.0,
+          "status": 200,
+          "bytes": 59006,
+          "cacheControl": "public,max-age=300",
+          "liveStatus": null,
+          "routes": 2,
+          "vehicles": 0
+        },
+        "snapshot": {
+          "ms": 685.9,
+          "status": 200,
+          "bytes": 472,
+          "cacheControl": "no-store",
+          "liveStatus": "live",
+          "routes": 0,
+          "vehicles": 1
+        }
+      },
+      {
+        "network": {
+          "ms": 304.2,
+          "status": 200,
+          "bytes": 59006,
+          "cacheControl": "public,max-age=300",
+          "liveStatus": null,
+          "routes": 2,
+          "vehicles": 0
+        },
+        "snapshot": {
+          "ms": 5210.4,
+          "status": 200,
+          "bytes": 463,
+          "cacheControl": "no-store",
+          "liveStatus": "live",
+          "routes": 0,
+          "vehicles": 1
+        }
+      }
+    ]
+  },
+  "checks": {
+    "noHorizontalOverflow": true,
+    "consoleErrorsNormalFlow": 0,
+    "longTasksOver50msInConfirmedRuns": 0,
+    "mapChunkFailureRecovery": "passed: failed lazy chunk => Reload app => module recovered; no token fallback visible",
+    "additionalFlows": "nearest stops, save/unsave place, trip mode switching, route refresh, walking journey start/end, stop selection, Home return, bus details"
+  },
+  "limitations": [
+    "Real Mapbox tiles, camera controls and 3D cannot be validated without an authorized token-enabled build.",
+    "No low-end physical phone or interaction CPU/network throttling.",
+    "Public API measurements belong to deployed code, not these uncommitted changes.",
+    "PDF viewer and real GPS not measured."
+  ]
+}

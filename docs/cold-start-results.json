@@ -1,0 +1,413 @@
+{
+  "baseline": "Prior performance pass on codex/mobile-performance; GMV service unchanged from e411bed",
+  "coldStart": {
+    "method": "Five independent empty-cache GMV services; 150 ms synthetic upstream waits except the empty Baity Hill vehicle endpoint at 450 ms; in-memory warm-cache reads exclude HTTP and process startup.",
+    "before": {
+      "baseline": "artifacts/performance/followup/before/service.cjs",
+      "upstreamDelayMs": 150,
+      "slowEmptyRouteDelayMs": 450,
+      "medians": {
+        "networkMs": 452.6349170000001,
+        "snapshotMs": 602.712291,
+        "warmMs": 0.0702499999997599
+      },
+      "runs": [
+        {
+          "networkMs": 456.171583,
+          "snapshotMs": 602.712291,
+          "warmMs": 0.0750829999999496,
+          "calls": 9,
+          "routeIds": [
+            "BAITY_HILL",
+            "P2P_EXPRESS"
+          ],
+          "status": "live"
+        },
+        {
+          "networkMs": 452.6349170000001,
+          "snapshotMs": 601.98875,
+          "warmMs": 0.05741599999987557,
+          "calls": 9,
+          "routeIds": [
+            "BAITY_HILL",
+            "P2P_EXPRESS"
+          ],
+          "status": "live"
+        },
+        {
+          "networkMs": 452.24129200000016,
+          "snapshotMs": 602.565417,
+          "warmMs": 0.05479199999990669,
+          "calls": 9,
+          "routeIds": [
+            "BAITY_HILL",
+            "P2P_EXPRESS"
+          ],
+          "status": "live"
+        },
+        {
+          "networkMs": 451.6749590000002,
+          "snapshotMs": 603.0262500000001,
+          "warmMs": 0.0702499999997599,
+          "calls": 9,
+          "routeIds": [
+            "BAITY_HILL",
+            "P2P_EXPRESS"
+          ],
+          "status": "live"
+        },
+        {
+          "networkMs": 452.9053750000003,
+          "snapshotMs": 602.9715000000001,
+          "warmMs": 0.11349999999993088,
+          "calls": 9,
+          "routeIds": [
+            "BAITY_HILL",
+            "P2P_EXPRESS"
+          ],
+          "status": "live"
+        }
+      ]
+    },
+    "after": {
+      "baseline": "working-tree",
+      "upstreamDelayMs": 150,
+      "slowEmptyRouteDelayMs": 450,
+      "medians": {
+        "networkMs": 303.33850000000007,
+        "snapshotMs": 451.4350000000002,
+        "warmMs": 0.1044170000000122
+      },
+      "runs": [
+        {
+          "networkMs": 304.14187499999997,
+          "snapshotMs": 452.428458,
+          "warmMs": 0.07420799999999872,
+          "calls": 9,
+          "routeIds": [
+            "BAITY_HILL",
+            "P2P_EXPRESS"
+          ],
+          "status": "live"
+        },
+        {
+          "networkMs": 303.97083299999997,
+          "snapshotMs": 451.62429099999997,
+          "warmMs": 0.14637499999992087,
+          "calls": 9,
+          "routeIds": [
+            "BAITY_HILL",
+            "P2P_EXPRESS"
+          ],
+          "status": "live"
+        },
+        {
+          "networkMs": 301.788,
+          "snapshotMs": 451.028583,
+          "warmMs": 0.05979099999990467,
+          "calls": 9,
+          "routeIds": [
+            "BAITY_HILL",
+            "P2P_EXPRESS"
+          ],
+          "status": "live"
+        },
+        {
+          "networkMs": 303.33850000000007,
+          "snapshotMs": 450.74424999999997,
+          "warmMs": 0.1044170000000122,
+          "calls": 9,
+          "routeIds": [
+            "BAITY_HILL",
+            "P2P_EXPRESS"
+          ],
+          "status": "live"
+        },
+        {
+          "networkMs": 301.74016700000016,
+          "snapshotMs": 451.4350000000002,
+          "warmMs": 0.1764579999999114,
+          "calls": 9,
+          "routeIds": [
+            "BAITY_HILL",
+            "P2P_EXPRESS"
+          ],
+          "status": "live"
+        }
+      ]
+    }
+  },
+  "preview": {
+    "method": "Five runs against actual Vite preview of the same production dist, using a small HTTP cache client with 150 ms simulated delay per network request; HTML then parallel initial JS/CSS; warm load keeps its cache. Excludes JS execution, rendering, images and lazy map assets. Before uses Vite default preview middleware; after uses repository preview config. Not a browser navigation metric.",
+    "before": {
+      "mode": "before-preview-caching",
+      "simulatedRequestDelayMs": 150,
+      "medians": {
+        "coldMs": 317.766083,
+        "warmMs": 306.5798340000001
+      },
+      "runs": [
+        {
+          "cold": {
+            "ms": 621.547875,
+            "requests": 3,
+            "bodyBytes": 110193
+          },
+          "warm": {
+            "ms": 308.016125,
+            "requests": 3,
+            "bodyBytes": 0
+          },
+          "assetHeaders": [
+            {
+              "url": "/assets/index-C7AHhiP3.js",
+              "cacheControl": "no-cache",
+              "encoding": "gzip"
+            },
+            {
+              "url": "/assets/index-DAtaavta.css",
+              "cacheControl": "no-cache",
+              "encoding": "gzip"
+            }
+          ],
+          "htmlCacheControl": "no-cache"
+        },
+        {
+          "cold": {
+            "ms": 313.6582920000001,
+            "requests": 3,
+            "bodyBytes": 110193
+          },
+          "warm": {
+            "ms": 306.99529200000006,
+            "requests": 3,
+            "bodyBytes": 0
+          },
+          "assetHeaders": [
+            {
+              "url": "/assets/index-C7AHhiP3.js",
+              "cacheControl": "no-cache",
+              "encoding": "gzip"
+            },
+            {
+              "url": "/assets/index-DAtaavta.css",
+              "cacheControl": "no-cache",
+              "encoding": "gzip"
+            }
+          ],
+          "htmlCacheControl": "no-cache"
+        },
+        {
+          "cold": {
+            "ms": 327.954667,
+            "requests": 3,
+            "bodyBytes": 110193
+          },
+          "warm": {
+            "ms": 303.8884170000001,
+            "requests": 3,
+            "bodyBytes": 0
+          },
+          "assetHeaders": [
+            {
+              "url": "/assets/index-C7AHhiP3.js",
+              "cacheControl": "no-cache",
+              "encoding": "gzip"
+            },
+            {
+              "url": "/assets/index-DAtaavta.css",
+              "cacheControl": "no-cache",
+              "encoding": "gzip"
+            }
+          ],
+          "htmlCacheControl": "no-cache"
+        },
+        {
+          "cold": {
+            "ms": 317.766083,
+            "requests": 3,
+            "bodyBytes": 110193
+          },
+          "warm": {
+            "ms": 303.93425000000025,
+            "requests": 3,
+            "bodyBytes": 0
+          },
+          "assetHeaders": [
+            {
+              "url": "/assets/index-C7AHhiP3.js",
+              "cacheControl": "no-cache",
+              "encoding": "gzip"
+            },
+            {
+              "url": "/assets/index-DAtaavta.css",
+              "cacheControl": "no-cache",
+              "encoding": "gzip"
+            }
+          ],
+          "htmlCacheControl": "no-cache"
+        },
+        {
+          "cold": {
+            "ms": 316.2171659999999,
+            "requests": 3,
+            "bodyBytes": 110193
+          },
+          "warm": {
+            "ms": 306.5798340000001,
+            "requests": 3,
+            "bodyBytes": 0
+          },
+          "assetHeaders": [
+            {
+              "url": "/assets/index-C7AHhiP3.js",
+              "cacheControl": "no-cache",
+              "encoding": "gzip"
+            },
+            {
+              "url": "/assets/index-DAtaavta.css",
+              "cacheControl": "no-cache",
+              "encoding": "gzip"
+            }
+          ],
+          "htmlCacheControl": "no-cache"
+        }
+      ]
+    },
+    "after": {
+      "mode": "after-preview-caching",
+      "simulatedRequestDelayMs": 150,
+      "medians": {
+        "coldMs": 315.89824999999996,
+        "warmMs": 152.30629199999998
+      },
+      "runs": [
+        {
+          "cold": {
+            "ms": 321.42575,
+            "requests": 3,
+            "bodyBytes": 110193
+          },
+          "warm": {
+            "ms": 154.55191599999995,
+            "requests": 1,
+            "bodyBytes": 0
+          },
+          "assetHeaders": [
+            {
+              "url": "/assets/index-C7AHhiP3.js",
+              "cacheControl": "public, max-age=31536000, immutable",
+              "encoding": "gzip"
+            },
+            {
+              "url": "/assets/index-DAtaavta.css",
+              "cacheControl": "public, max-age=31536000, immutable",
+              "encoding": "gzip"
+            }
+          ],
+          "htmlCacheControl": "no-cache"
+        },
+        {
+          "cold": {
+            "ms": 319.36408299999994,
+            "requests": 3,
+            "bodyBytes": 110193
+          },
+          "warm": {
+            "ms": 154.53949999999998,
+            "requests": 1,
+            "bodyBytes": 0
+          },
+          "assetHeaders": [
+            {
+              "url": "/assets/index-C7AHhiP3.js",
+              "cacheControl": "public, max-age=31536000, immutable",
+              "encoding": "gzip"
+            },
+            {
+              "url": "/assets/index-DAtaavta.css",
+              "cacheControl": "public, max-age=31536000, immutable",
+              "encoding": "gzip"
+            }
+          ],
+          "htmlCacheControl": "no-cache"
+        },
+        {
+          "cold": {
+            "ms": 315.89824999999996,
+            "requests": 3,
+            "bodyBytes": 110193
+          },
+          "warm": {
+            "ms": 152.1311250000001,
+            "requests": 1,
+            "bodyBytes": 0
+          },
+          "assetHeaders": [
+            {
+              "url": "/assets/index-C7AHhiP3.js",
+              "cacheControl": "public, max-age=31536000, immutable",
+              "encoding": "gzip"
+            },
+            {
+              "url": "/assets/index-DAtaavta.css",
+              "cacheControl": "public, max-age=31536000, immutable",
+              "encoding": "gzip"
+            }
+          ],
+          "htmlCacheControl": "no-cache"
+        },
+        {
+          "cold": {
+            "ms": 313.998458,
+            "requests": 3,
+            "bodyBytes": 110193
+          },
+          "warm": {
+            "ms": 152.30629199999998,
+            "requests": 1,
+            "bodyBytes": 0
+          },
+          "assetHeaders": [
+            {
+              "url": "/assets/index-C7AHhiP3.js",
+              "cacheControl": "public, max-age=31536000, immutable",
+              "encoding": "gzip"
+            },
+            {
+              "url": "/assets/index-DAtaavta.css",
+              "cacheControl": "public, max-age=31536000, immutable",
+              "encoding": "gzip"
+            }
+          ],
+          "htmlCacheControl": "no-cache"
+        },
+        {
+          "cold": {
+            "ms": 315.1144169999998,
+            "requests": 3,
+            "bodyBytes": 110193
+          },
+          "warm": {
+            "ms": 151.83395800000017,
+            "requests": 1,
+            "bodyBytes": 0
+          },
+          "assetHeaders": [
+            {
+              "url": "/assets/index-C7AHhiP3.js",
+              "cacheControl": "public, max-age=31536000, immutable",
+              "encoding": "gzip"
+            },
+            {
+              "url": "/assets/index-DAtaavta.css",
+              "cacheControl": "public, max-age=31536000, immutable",
+              "encoding": "gzip"
+            }
+          ],
+          "htmlCacheControl": "no-cache"
+        }
+      ]
+    }
+  }
+}

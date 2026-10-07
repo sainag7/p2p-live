@@ -1,0 +1,283 @@
+/* Scoped to the public rider app.
+   Apple Maps / Weather / Find My craft bar — iOS system grammar on mobile web. */
+.passenger-app {
+  /* Semantic system colors (light scene: campus daylight) */
+  --rider-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --rider-bg: #f2f2f7;
+  --rider-surface: #ffffff;
+  --rider-elevated: #ffffff;
+  --rider-grouped: #f2f2f7;
+  --rider-ink: #000000;
+  --rider-secondary: rgba(60, 60, 67, 0.6);
+  --rider-tertiary: rgba(60, 60, 67, 0.3);
+  --rider-separator: rgba(60, 60, 67, 0.12);
+  --rider-fill: rgba(120, 120, 128, 0.16);
+  --rider-fill-strong: rgba(120, 120, 128, 0.2);
+  --rider-tint: #007aff;
+  --rider-tint-press: #0066d6;
+  --rider-blue: #418fc5;
+  --rider-red: #c33934;
+  --rider-blue-tint: #e8f4fc;
+  --rider-red-tint: #fceeee;
+  --rider-success: #34c759;
+  --rider-warning: #ff9500;
+  --rider-danger: #ff3b30;
+  --rider-success-ink: #248a3d;
+  --rider-warning-ink: #9a6700;
+  --rider-disclosure: #c7c7cc;
+  --rider-tab-inactive: #8e8e93;
+  --rider-nav-material: rgba(249, 249, 249, 0.78);
+  --rider-search-fill: rgba(118, 118, 128, 0.12);
+  --rider-bar-edge: rgba(0, 0, 0, 0.18);
+  --rider-urgency-soon: #fff3cd;
+  --rider-urgency-now: #ffe5e3;
+  --rider-urgency-now-ink: #d70015;
+  --rider-moon: #f4efd6;
+  --rider-night-secondary: rgba(235, 235, 245, 0.6);
+  --rider-night-focus: #64d2ff;
+  --rider-radius: 12px;
+  --rider-radius-btn: 14px;
+  --rider-radius-lg: 16px;
+  --rider-radius-xl: 20px;
+  --rider-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --rider-shadow-sheet: 0 -8px 40px rgba(0, 0, 0, 0.12);
+  --rider-space: 16px;
+  --rider-section-gap: 28px;
+  --rider-nav-h: calc(49px + env(safe-area-inset-bottom));
+  --rider-hairline: 0.5px;
+  font-family: var(--rider-font);
+  color: var(--rider-ink);
+  background: var(--rider-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.passenger-app.is-light { --rider-bg: #f2f2f7; }
+.passenger-app button,
+.passenger-app input { font-family: inherit; }
+.passenger-app .route-filter {
+  border: var(--rider-hairline) solid var(--rider-separator);
+  background: var(--rider-surface);
+  color: var(--rider-secondary);
+  border-radius: 980px;
+  min-height: 36px;
+  padding: 6px 12px;
+  font-size: 15px;
+  font-weight: 590;
+}
+.passenger-app .route-filter[data-route="P2P_EXPRESS"] { --filter-color: var(--rider-blue); --filter-tint: var(--rider-blue-tint); }
+.passenger-app .route-filter[data-route="BAITY_HILL"] { --filter-color: var(--rider-red); --filter-tint: var(--rider-red-tint); }
+.passenger-app .route-filter[aria-pressed="true"] {
+  border-color: transparent;
+  background: var(--filter-tint);
+  color: var(--rider-ink);
+}
+.passenger-app .route-filter[aria-pressed="true"] > svg { color: var(--filter-color); }
+.passenger-app .route-filter > svg { flex-shrink: 0; }
+.passenger-app .route-filter:focus-visible { outline: 3px solid var(--rider-tint); outline-offset: 2px; }
+
+.passenger-app .home-header.compact-passenger-header {
+  min-height: 44px;
+  padding: 6px 16px;
+  background: rgba(242, 242, 247, 0.82);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+.passenger-app .passenger-plan-scroll {
+  background: var(--rider-bg);
+  padding-bottom: calc(var(--rider-nav-h) + 12px);
+}
+.passenger-app .trip-view {
+  font-family: var(--rider-font);
+  color: var(--rider-ink);
+  background: var(--rider-bg);
+  width: 100%;
+  max-width: 640px;
+  height: auto;
+  min-height: 100%;
+  margin: 0 auto;
+  padding: 8px var(--rider-space) 24px;
+}
+.passenger-app .trip-view h2 { font-size: 28px; font-weight: 700; letter-spacing: -0.4px; color: var(--rider-ink); }
+.passenger-app .trip-view h3 { font-size: 20px; font-weight: 600; letter-spacing: -0.3px; color: var(--rider-ink); }
+.passenger-app .trip-view .uppercase { text-transform: none; letter-spacing: normal; }
+.passenger-app .trip-view input {
+  font-family: var(--rider-font);
+  font-size: 17px;
+  font-weight: 400;
+  color: var(--rider-ink);
+  min-height: 48px;
+}
+.passenger-app .trip-view input::placeholder { color: var(--rider-tertiary); }
+.passenger-app .trip-card {
+  border: none;
+  border-radius: var(--rider-radius-lg);
+  box-shadow: none;
+  background: var(--rider-surface);
+  overflow: hidden;
+}
+.passenger-app .trip-view [data-dropdown-index] { min-height: 52px; border-radius: 0; }
+.passenger-app .trip-view [data-dropdown-index] .truncate { white-space: normal; overflow-wrap: anywhere; }
+.passenger-app .trip-view [data-dropdown-index] .text-xs { font-size: 13px; line-height: 1.35; color: var(--rider-secondary); }
+.passenger-app .trip-view [aria-selected="true"] > button { background: var(--rider-fill); }
+.passenger-app .bus-detail-sheet .bus-detail-eta {
+  font-size: 34px;
+  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: -0.6px;
+  font-variant-numeric: tabular-nums;
+}
+.passenger-app .trip-primary {
+  min-height: 50px;
+  border-radius: var(--rider-radius-btn);
+  box-shadow: none;
+  font-weight: 600;
+  font-size: 17px;
+  background: var(--rider-tint);
+}
+.passenger-app .trip-primary:active { background: var(--rider-tint-press); }
+.passenger-app .trip-view button:focus-visible,
+.passenger-app .bus-detail-sheet button:focus-visible { outline: 3px solid var(--rider-tint); outline-offset: 2px; }
+.passenger-app .trip-view svg,
+.passenger-app .bus-detail-sheet svg,
+.passenger-app .campus-toolbar svg,
+.passenger-app .campus-controls svg,
+.passenger-app .campus-sheet svg { stroke-width: 1.75; }
+
+.passenger-app .campus-map {
+  --campus-ink: var(--rider-ink);
+  --campus-muted: var(--rider-secondary);
+  --campus-border: var(--rider-separator);
+  font-family: var(--rider-font);
+}
+.passenger-app .campus-chip {
+  gap: 6px;
+  padding: 8px 12px;
+  font-weight: 590;
+  border-radius: 980px;
+  border: none;
+  box-shadow: var(--rider-shadow);
+  backdrop-filter: saturate(180%) blur(16px);
+  -webkit-backdrop-filter: saturate(180%) blur(16px);
+  background: rgba(255, 255, 255, 0.92);
+}
+.passenger-app .campus-control,
+.passenger-app .campus-options {
+  border-radius: var(--rider-radius);
+  border: none;
+  box-shadow: var(--rider-shadow);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: saturate(180%) blur(16px);
+  -webkit-backdrop-filter: saturate(180%) blur(16px);
+}
+.passenger-app .campus-options button { font-size: 15px; }
+.passenger-app .campus-sheet {
+  padding: 12px 16px 16px;
+  border-radius: var(--rider-radius-xl);
+  border: none;
+  box-shadow: var(--rider-shadow-sheet);
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: saturate(180%) blur(24px);
+  -webkit-backdrop-filter: saturate(180%) blur(24px);
+}
+.passenger-app .campus-sheet h2 { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
+.passenger-app .campus-arrival,
+.passenger-app .campus-hint,
+.passenger-app .campus-picker,
+.passenger-app .campus-sheet details { font-size: 15px; line-height: 1.4; }
+.passenger-app .campus-eyebrow,
+.passenger-app .campus-picker small { font-size: 13px; color: var(--rider-secondary); }
+.passenger-app .campus-arrival-time { font-size: 17px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.passenger-app .campus-primary {
+  border-radius: var(--rider-radius-btn);
+  font-size: 17px;
+  font-weight: 600;
+  background: var(--rider-tint);
+  min-height: 50px;
+}
+
+.passenger-app .bus-detail-sheet {
+  font-family: var(--rider-font);
+  color: var(--rider-ink);
+  border-radius: var(--rider-radius-xl) var(--rider-radius-xl) 0 0;
+  box-shadow: var(--rider-shadow-sheet);
+  background: var(--rider-surface);
+}
+.passenger-app .bus-detail-sheet h2 { font-size: 22px; font-weight: 700; letter-spacing: -0.3px; }
+.passenger-app .bus-detail-sheet h3 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--rider-secondary);
+  text-transform: none;
+  letter-spacing: normal;
+}
+.passenger-app .bus-detail-sheet .bus-detail-summary {
+  background: var(--rider-grouped);
+  border: 0;
+  border-radius: var(--rider-radius);
+}
+.passenger-app .bus-detail-sheet .bus-detail-close {
+  min-width: 30px;
+  min-height: 30px;
+  width: 30px;
+  height: 30px;
+  border-radius: 980px;
+  background: var(--rider-fill);
+  display: grid;
+  place-items: center;
+}
+.passenger-app .bus-detail-sheet .truncate { white-space: normal; overflow-wrap: anywhere; }
+
+/* System-style banners */
+.passenger-app .rider-banner {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 12px 14px;
+  border-radius: var(--rider-radius);
+  background: var(--rider-surface);
+  box-shadow: var(--rider-shadow);
+  position: relative;
+}
+.passenger-app .rider-banner p { margin: 0; padding-right: 28px; }
+.passenger-app .rider-banner .rider-banner-title { font-size: 15px; font-weight: 600; color: var(--rider-ink); }
+.passenger-app .rider-banner .rider-banner-body { margin-top: 4px; font-size: 13px; line-height: 1.35; color: var(--rider-secondary); }
+.passenger-app .rider-banner .rider-banner-meta { margin-top: 6px; font-size: 12px; font-weight: 500; color: var(--rider-tint); }
+.passenger-app .rider-banner-dismiss {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 980px;
+  color: var(--rider-secondary);
+  background: var(--rider-fill);
+}
+.passenger-app .rider-banner.is-warning { background: #fff7ed; }
+.passenger-app .rider-banner.is-info { background: #eff6ff; }
+.passenger-app .rider-banner-action {
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 980px;
+  background: var(--rider-tint);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+@media (min-width: 640px) {
+  .passenger-app .bus-detail-sheet { border-radius: var(--rider-radius-xl); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .passenger-app .trip-view *,
+  .passenger-app .bus-detail-sheet *,
+  .passenger-app .home-header * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

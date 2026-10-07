@@ -36,8 +36,10 @@ export function getDistanceMiles(c1: Coordinate, c2: Coordinate): number {
   return getDistanceMeters(c1, c2) / METERS_PER_MILE;
 }
 
+export const getWalkTimeSeconds = (distanceMeters: number): number => distanceMeters / WALKING_SPEED_MPS;
+
 export const getWalkTimeMinutes = (distanceMeters: number): number => {
-  return Math.ceil(distanceMeters / WALKING_SPEED_MPS / 60);
+  return Math.ceil(getWalkTimeSeconds(distanceMeters) / 60);
 };
 
 export const findNearestStop = (userLocation: Coordinate, stops: Stop[]): Stop | null => {

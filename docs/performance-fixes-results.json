@@ -1,0 +1,265 @@
+{
+  "date": "2026-10-05",
+  "method": {
+    "uiRuns": 3,
+    "viewport": "390x844",
+    "apiDelayMs": 150,
+    "build": "production",
+    "interactionThrottling": false,
+    "baseline": "Prior end-to-end audit in e2e-performance-results.json",
+    "noticeRuns": 5,
+    "noticeDelayMs": 2000,
+    "noticeBaseline": "Pre-fix working-tree service, retaining prior overlap optimization"
+  },
+  "ui": [
+    {
+      "name": "First address results",
+      "beforeMedianMs": 440.8,
+      "afterMedianMs": 342,
+      "afterRunsMs": [
+        349.2,
+        342,
+        338.6
+      ]
+    },
+    {
+      "name": "Repeated address results",
+      "beforeMedianMs": 444.7,
+      "afterMedianMs": 8.3,
+      "afterRunsMs": [
+        1.6,
+        9.1,
+        8.3
+      ]
+    },
+    {
+      "name": "First usable trip option",
+      "beforeMedianMs": 313.3,
+      "afterMedianMs": 165.4,
+      "afterRunsMs": [
+        185.1,
+        160.8,
+        165.4
+      ]
+    },
+    {
+      "name": "Complete trip options",
+      "beforeMedianMs": 313.3,
+      "afterMedianMs": 323.9,
+      "afterRunsMs": [
+        342.9,
+        320.3,
+        323.9
+      ]
+    },
+    {
+      "name": "Trip visually settled",
+      "beforeMedianMs": 1521.1,
+      "afterMedianMs": 547.7,
+      "afterRunsMs": [
+        566.3,
+        543.9,
+        547.7
+      ]
+    },
+    {
+      "name": "Home bus data",
+      "beforeMedianMs": 193.5,
+      "afterMedianMs": 191.7,
+      "afterRunsMs": [
+        232.2,
+        191.7,
+        183.1
+      ]
+    },
+    {
+      "name": "First map renderer module",
+      "beforeMedianMs": 62.5,
+      "afterMedianMs": 69.7,
+      "afterRunsMs": [
+        77.4,
+        69.7,
+        61.2
+      ]
+    }
+  ],
+  "slowNotices": {
+    "before": {
+      "baseline": "artifacts/performance/fixes-before/service.cjs",
+      "upstreamDelayMs": 150,
+      "slowEmptyRouteDelayMs": 450,
+      "noticeDelayMs": 2000,
+      "medians": {
+        "networkMs": 302.38025000000016,
+        "snapshotMs": 2001.023375,
+        "warmMs": 0.035917000000154076
+      },
+      "runs": [
+        {
+          "networkMs": 302.580209,
+          "snapshotMs": 2001.023375,
+          "warmMs": 0.032000000000152795,
+          "calls": 9,
+          "routeIds": [
+            "BAITY_HILL",
+            "P2P_EXPRESS"
+          ],
+          "status": "live",
+          "messagesPending": false
+        },
+        {
+          "networkMs": 302.4921670000001,
+          "snapshotMs": 2001.3695839999998,
+          "warmMs": 0.035917000000154076,
+          "calls": 9,
+          "routeIds": [
+            "BAITY_HILL",
+            "P2P_EXPRESS"
+          ],
+          "status": "live",
+          "messagesPending": false
+        },
+        {
+          "networkMs": 302.38025000000016,
+          "snapshotMs": 2000.830916,
+          "warmMs": 0.04195799999979499,
+          "calls": 9,
+          "routeIds": [
+            "BAITY_HILL",
+            "P2P_EXPRESS"
+          ],
+          "status": "live",
+          "messagesPending": false
+        },
+        {
+          "networkMs": 301.39400000000023,
+          "snapshotMs": 2000.69675,
+          "warmMs": 0.02533300000050076,
+          "calls": 9,
+          "routeIds": [
+            "BAITY_HILL",
+            "P2P_EXPRESS"
+          ],
+          "status": "live",
+          "messagesPending": false
+        },
+        {
+          "networkMs": 301.74216700000034,
+          "snapshotMs": 2001.3343330000007,
+          "warmMs": 0.10562499999832653,
+          "calls": 9,
+          "routeIds": [
+            "BAITY_HILL",
+            "P2P_EXPRESS"
+          ],
+          "status": "live",
+          "messagesPending": false
+        }
+      ]
+    },
+    "after": {
+      "baseline": "working-tree",
+      "upstreamDelayMs": 150,
+      "slowEmptyRouteDelayMs": 450,
+      "noticeDelayMs": 2000,
+      "medians": {
+        "networkMs": 302.57116700000006,
+        "snapshotMs": 450.68216600000005,
+        "warmMs": 1.2587499999999636
+      },
+      "runs": [
+        {
+          "networkMs": 301.7205,
+          "snapshotMs": 451.519583,
+          "warmMs": 1.227624999999989,
+          "calls": 9,
+          "routeIds": [
+            "BAITY_HILL",
+            "P2P_EXPRESS"
+          ],
+          "status": "live",
+          "messagesPending": true
+        },
+        {
+          "networkMs": 302.57116700000006,
+          "snapshotMs": 450.14275,
+          "warmMs": 1.2942920000000413,
+          "calls": 9,
+          "routeIds": [
+            "BAITY_HILL",
+            "P2P_EXPRESS"
+          ],
+          "status": "live",
+          "messagesPending": true
+        },
+        {
+          "networkMs": 301.42766600000004,
+          "snapshotMs": 450.68216600000005,
+          "warmMs": 1.2587499999999636,
+          "calls": 9,
+          "routeIds": [
+            "BAITY_HILL",
+            "P2P_EXPRESS"
+          ],
+          "status": "live",
+          "messagesPending": true
+        },
+        {
+          "networkMs": 302.59916699999985,
+          "snapshotMs": 450.39754199999993,
+          "warmMs": 1.5079579999999169,
+          "calls": 9,
+          "routeIds": [
+            "BAITY_HILL",
+            "P2P_EXPRESS"
+          ],
+          "status": "live",
+          "messagesPending": true
+        },
+        {
+          "networkMs": 302.7534169999999,
+          "snapshotMs": 450.75241700000015,
+          "warmMs": 1.2276670000001104,
+          "calls": 9,
+          "routeIds": [
+            "BAITY_HILL",
+            "P2P_EXPRESS"
+          ],
+          "status": "live",
+          "messagesPending": true
+        }
+      ]
+    }
+  },
+  "geocodeRequestsPerRun": [
+    1,
+    1,
+    1
+  ],
+  "lighthouseSpotCheck": {
+    "runs": 1,
+    "score": 99.0,
+    "fcpMs": 1507.1558,
+    "lcpMs": 1657.1558,
+    "tbtMs": 0
+  },
+  "validation": {
+    "testsPassed": 201,
+    "testFiles": 27,
+    "typecheck": "passed",
+    "build": "passed",
+    "manual": [
+      "Progressive walk with delayed bus",
+      "Start walking before bus completion; late result preserves journey",
+      "Bus selection retained on refresh",
+      "Start and end bus journey",
+      "Mobile and desktop overflow checks"
+    ]
+  },
+  "limits": [
+    "Controlled local fixtures, not deployed latency",
+    "No real Mapbox tiles or GPS measured",
+    "Address animation settling omitted: old observer crossed view transitions; probe now captures original scope",
+    "No material first-map module speed improvement claimed"
+  ]
+}

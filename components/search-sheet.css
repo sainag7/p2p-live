@@ -1,0 +1,133 @@
+/* Search sheet: grows out of whatever opened it. The iOS sheet curve throughout. */
+.ss-root{--ease:cubic-bezier(.32,.72,0,1);--ink:#152735;--muted:#526674;--line:#e1e8ed;--field:#eef2f5;--accent:#245e85;position:fixed;inset:0;z-index:80;font-family:var(--rider-font,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif);color:var(--ink)}
+.ss-root.passenger-app{background:transparent}
+.ss-dim{position:absolute;inset:0;background:rgba(6,18,28,.45);opacity:0;transition:opacity .32s ease}
+.ss-root[data-phase=open] .ss-dim{opacity:1}
+.ss-root[data-phase=closing] .ss-dim{opacity:0;transition-duration:.22s}
+
+.ss-sheet{position:absolute;inset:0;height:100dvh;display:flex;flex-direction:column;background:#f6f8f9;overflow:hidden;will-change:clip-path}
+.ss-root[data-phase=open] .ss-sheet{transition:clip-path .32s var(--ease),-webkit-clip-path .32s var(--ease)}
+.ss-root[data-phase=closing] .ss-sheet{transition:clip-path .22s cubic-bezier(.4,0,.2,1),-webkit-clip-path .22s cubic-bezier(.4,0,.2,1)}
+.ss-root[data-phase=closing][data-close=fade] .ss-sheet{opacity:0;transform:scale(.98);transition:opacity .18s ease,transform .18s ease}
+
+/* A copy of the tapped bar rides on top while the sheet grows, then fades to reveal the content. */
+.ss-cover{position:absolute;inset:0;pointer-events:none;background:#fff;transition:opacity .14s ease .08s}
+.ss-root[data-phase=open] .ss-cover{opacity:0}
+.ss-root[data-phase=closing][data-close=shrink] .ss-cover{opacity:1;transition:opacity .12s ease}
+.ss-root[data-close=fade][data-phase=closing] .ss-cover{opacity:0}
+.ss-cover-label{position:absolute;display:flex;align-items:center;gap:10px;padding:0 15px;color:#566977;font-size:16px;white-space:nowrap;transition:opacity .12s ease}
+.ss-cover-label svg{width:20px;height:20px;flex-shrink:0}
+.ss-root[data-phase=open] .ss-cover-label{opacity:0}
+
+/* Header (Light): white with a hairline, gray field and segmented control. */
+.ss-header{flex-shrink:0;display:flex;flex-direction:column;gap:12px;padding:max(16px,env(safe-area-inset-top)) 16px 14px;background:#fff;border-bottom:1px solid #e3eaef}
+.ss-header[data-enter=first]{animation:ss-header .24s var(--ease) .04s both}
+.ss-header:not([data-enter=first]){animation:ss-header .24s var(--ease) both}
+.ss-search-row{display:flex;align-items:center;gap:10px}
+.ss-field{flex:1;min-width:0;display:flex;align-items:center;gap:10px;min-height:48px;padding:0 6px 0 14px;border-radius:12px;background:var(--field);color:#566977}
+.ss-field:focus-within{box-shadow:0 0 0 2px #9cc9ef}
+.ss-field>svg{width:20px;height:20px;flex-shrink:0}
+.ss-field input{flex:1;min-width:0;height:44px;border:0;padding:0;background:transparent;font:inherit;font-size:16px;color:var(--ink);outline:none}
+.ss-field input::placeholder{color:#6b7f8c}
+.ss-field input::-webkit-search-cancel-button{display:none}
+.ss-clear{display:grid;place-items:center;width:36px;height:36px;border-radius:50%;color:#687d89}
+.ss-clear svg{width:18px;height:18px}
+.ss-cancel{min-height:44px;padding:0 4px;color:var(--accent);font-size:16px;font-weight:600}
+.ss-segment{position:relative;display:flex;padding:4px;border-radius:12px;background:var(--field)}
+.ss-segment-pill{position:absolute;top:4px;bottom:4px;left:4px;width:calc(50% - 4px);border-radius:9px;background:#fff;box-shadow:0 1px 3px rgba(16,40,60,.16);transition:transform .24s var(--ease)}
+.ss-segment[data-tab=stops] .ss-segment-pill{transform:translateX(100%)}
+.ss-segment button{position:relative;flex:1;min-height:40px;display:flex;align-items:center;justify-content:center;gap:6px;font-size:15px;font-weight:650;color:var(--muted);transition:color .3s ease}
+.ss-segment button[aria-pressed=true]{color:var(--accent)}
+.ss-segment svg{width:16px;height:16px}
+
+.ss-trip-header{flex-direction:row;align-items:flex-start;gap:6px;padding-left:8px;padding-right:12px}
+.ss-icon-button{flex-shrink:0;display:grid;place-items:center;width:44px;height:44px;border-radius:50%;color:var(--ink)}
+.ss-icon-button svg{width:22px;height:22px}
+.ss-close{background:var(--field)}
+.ss-close svg{width:19px;height:19px}
+.ss-endpoints{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
+.ss-endpoint{display:flex;align-items:center;gap:10px;min-height:44px;padding:0 4px 0 12px;border-radius:10px;background:var(--field);font-size:15px}
+.ss-endpoint>svg{width:16px;height:16px;flex-shrink:0;color:var(--accent)}
+.ss-endpoint strong{flex:1;min-width:0;font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ss-chip{padding:3px 9px;border-radius:7px;background:#e7f2fa;color:var(--accent);font-size:14px;font-weight:650}
+
+/* Body panes and rows. */
+.ss-body{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.ss-pane{--base:0s;padding:14px 16px calc(28px + env(safe-area-inset-bottom))}
+.ss-pane[data-enter=first]{--base:.08s}
+.ss-pane[data-enter=right]{animation:ss-from-right .24s var(--ease) both}
+.ss-pane[data-enter=left]{animation:ss-from-left .24s var(--ease) both}
+.ss-pane[data-enter=push]{animation:ss-push .24s var(--ease) both}
+.ss-pane[data-enter=pop]{animation:ss-pop .22s var(--ease) both}
+.ss-row,.ss-section>.ss-label{animation:ss-row .26s var(--ease) both;animation-delay:calc(var(--base) + var(--i,0) * 15ms)}
+.ss-section+.ss-section{margin-top:18px}
+.ss-label{margin:0 0 8px;padding:0 4px;font-size:12px;font-weight:750;letter-spacing:.8px;text-transform:uppercase;color:var(--muted)}
+.ss-list{display:flex;flex-direction:column;gap:8px;margin:0;padding:0;list-style:none}
+.ss-list>.ss-row{display:flex;align-items:center;gap:4px;padding:4px 4px 4px 12px;border:1px solid var(--line);border-radius:14px;background:#fff}
+.ss-hint{padding:12px 14px!important;font-size:15px;line-height:1.45;color:var(--muted)}
+.ss-row-main{flex:1;min-width:0;display:flex;align-items:center;gap:12px;min-height:56px;padding:6px 0;text-align:left;color:var(--ink);transition:transform .14s ease}
+.ss-row-main:active,.ss-stop:active{transform:scale(.975)}
+.ss-tile{flex-shrink:0;display:grid;place-items:center;width:38px;height:38px;border-radius:11px;background:#eef1f3;color:#4c6676}
+.ss-tile[data-icon=star]{background:#e7f2fa;color:var(--accent)}
+.ss-tile svg{width:19px;height:19px}
+.ss-row-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.ss-row-text strong{font-size:16px;font-weight:700;overflow-wrap:anywhere}
+.ss-row-text>span{font-size:14px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ss-row-text mark{background:#fff0b3;color:inherit;border-radius:3px;padding:0 1px}
+.ss-row-walk{flex-shrink:0;font-size:13px;color:var(--muted);white-space:nowrap}
+.ss-star{flex-shrink:0;display:grid;place-items:center;width:44px;height:44px;border-radius:50%;color:#8a9aa5}
+.ss-star[aria-pressed=true]{color:#b87900}
+.ss-star svg{width:20px;height:20px}
+.ss-star[aria-pressed=true] svg{animation:ss-star .45s cubic-bezier(.16,1,.3,1)}
+.ss-note{margin:12px 4px 0;font-size:14px;line-height:1.45;color:var(--muted)}
+
+/* Nearest stops. */
+.ss-stops-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.ss-stops-heading .ss-label{margin:0}
+.ss-live{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:650;color:#32634d}
+.ss-live i{position:relative;width:7px;height:7px;border-radius:50%;background:#3b8c6d}
+.ss-live i::after{content:'';position:absolute;inset:0;border-radius:50%;background:inherit;animation:ss-live 2s ease-out infinite}
+.ss-service{font-size:13px;font-weight:600;color:var(--muted);text-align:right}
+.ss-stop{flex:1;min-width:0;display:flex;align-items:center;gap:10px;min-height:64px;padding:8px 8px 8px 2px;text-align:left;color:var(--ink);transition:transform .14s ease}
+.ss-walk{display:flex;align-items:center;gap:6px}
+.ss-walk svg{width:15px;height:15px}
+.ss-times{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.ss-time{--route:#2f73a0;--tint:#e7f2fa;--tint-ink:#1f4f70;min-width:88px;display:flex;flex-direction:column;align-items:flex-end;gap:3px;padding:7px 10px;border-radius:10px;background:var(--tint);color:var(--tint-ink)}
+.ss-time[data-route=BAITY_HILL]{--route:#b73230;--tint:#fbeceb;--tint-ink:#7f2321}
+.ss-time-route{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:750}
+.ss-time-route i{width:7px;height:7px;border-radius:50%;background:var(--route)}
+.ss-time-route em{font-style:normal;font-weight:600;opacity:.8}
+.ss-time-main{display:flex;align-items:baseline;gap:3px;line-height:1;color:var(--ink)}
+.ss-time-main strong{font-size:24px;font-weight:760;letter-spacing:-.8px;font-variant-numeric:tabular-nums}
+.ss-time-main small{font-size:13px;font-weight:600}
+.ss-time-then{font-size:12px;color:#3e5463}
+.ss-time-none{font-size:13px;color:var(--muted)}
+
+/* Trip options inside the sheet reuse the trip styles. */
+.ss-trip{padding-top:18px}
+.ss-trip .trip-loading{padding-top:0}
+.ss-root .ss-trip .trip-view{min-height:0;padding:0;background:transparent}
+.ss-error{display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:16px;border:1px solid #e3cfb1;border-radius:14px;background:#fff8ee;color:#8b4e16;font-size:15px}
+.ss-error svg{width:22px;height:22px}
+.ss-error button{min-height:44px;padding:0 14px;border-radius:9px;background:#8b4e16;color:#fff;font-weight:650}
+
+.ss-root button:focus-visible{outline:3px solid #216d9c;outline-offset:2px}
+
+/* The app behind sits back like a card while the sheet is up. */
+.passenger-app{transition:transform .32s cubic-bezier(.32,.72,0,1),border-radius .32s cubic-bezier(.32,.72,0,1)}
+.passenger-app.is-behind-sheet{transform:scale(.94) translateY(12px);border-radius:24px;overflow:hidden}
+html.has-search-sheet,html.has-search-sheet body{background:#0f1d29}
+
+@keyframes ss-header{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
+@keyframes ss-row{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes ss-from-right{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
+@keyframes ss-from-left{from{opacity:0;transform:translateX(-40px)}to{opacity:1;transform:none}}
+@keyframes ss-push{from{opacity:.4;transform:translateX(100%)}to{opacity:1;transform:none}}
+@keyframes ss-pop{from{opacity:0;transform:translateX(-30%)}to{opacity:1;transform:none}}
+@keyframes ss-star{0%{transform:scale(1)}40%{transform:scale(1.5) rotate(-14deg)}100%{transform:scale(1)}}
+@keyframes ss-live{to{transform:scale(3);opacity:0}}
+
+@media (prefers-reduced-motion:reduce){
+  .ss-root *,.ss-root *::after{animation:none!important;transition:none!important}
+  .passenger-app{transition:none}
+}

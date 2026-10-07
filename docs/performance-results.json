@@ -1,0 +1,563 @@
+{
+  "date": "2026-10-05",
+  "baseline": "e411bed",
+  "method": "Three cold Lighthouse mobile audits per build; three interaction runs at 390x844 with fixed service time and simulated data. API responses delayed 150ms. Interaction timings measure DOM readiness plus two animation frames, not field INP or full animation completion. No Mapbox token or real-device GPU benchmark.",
+  "before": {
+    "lighthouseVersion": "13.5.0",
+    "throttling": {
+      "rttMs": 150,
+      "throughputKbps": 1638.4,
+      "requestLatencyMs": 562.5,
+      "downloadThroughputKbps": 1474.5600000000002,
+      "uploadThroughputKbps": 675,
+      "cpuSlowdownMultiplier": 4
+    },
+    "screenEmulation": {
+      "mobile": true,
+      "width": 412,
+      "height": 823,
+      "deviceScaleFactor": 1.75,
+      "disabled": false
+    },
+    "initialJsGzipBytes": 564818,
+    "medianPerformanceScore": 69,
+    "medianMetrics": {
+      "first-contentful-paint": 4966.8249,
+      "largest-contentful-paint": 4966.8249,
+      "speed-index": 4966.8249,
+      "total-blocking-time": 0,
+      "cumulative-layout-shift": 0.03456496138236417
+    },
+    "medianInitialTransferBytes": 1607424,
+    "medianInteractionsMs": {
+      "Home ready": 252.8,
+      "Search open": 12,
+      "Nearest stops": 8.7,
+      "Trip results": 939.5,
+      "Bus details": 11.3,
+      "Map open": 11.4,
+      "Map options": 9.9,
+      "Browse stops": 8.7,
+      "Home return": 10.5,
+      "Refresh complete": 165.1
+    },
+    "lighthouseRuns": [
+      {
+        "score": 69,
+        "metrics": {
+          "first-contentful-paint": 4966.7119999999995,
+          "largest-contentful-paint": 4966.7119999999995,
+          "speed-index": 4966.7119999999995,
+          "total-blocking-time": 2.5,
+          "cumulative-layout-shift": 0.03456496138236417
+        }
+      },
+      {
+        "score": 69,
+        "metrics": {
+          "first-contentful-paint": 4971.9467,
+          "largest-contentful-paint": 4971.9467,
+          "speed-index": 4971.9467,
+          "total-blocking-time": 0,
+          "cumulative-layout-shift": 0.03456496138236417
+        }
+      },
+      {
+        "score": 69,
+        "metrics": {
+          "first-contentful-paint": 4966.8249,
+          "largest-contentful-paint": 4966.8249,
+          "speed-index": 4966.8249,
+          "total-blocking-time": 0,
+          "cumulative-layout-shift": 0.03456496138236417
+        }
+      }
+    ],
+    "interactionRuns": [
+      [
+        {
+          "action": "Home ready",
+          "ms": 244.5
+        },
+        {
+          "action": "Search open",
+          "ms": 12
+        },
+        {
+          "action": "Nearest stops",
+          "ms": 11.6
+        },
+        {
+          "action": "Trip results",
+          "ms": 945.3
+        },
+        {
+          "action": "Bus details",
+          "ms": 11.3
+        },
+        {
+          "action": "Map open",
+          "ms": 11.4
+        },
+        {
+          "action": "Map options",
+          "ms": 10.9
+        },
+        {
+          "action": "Browse stops",
+          "ms": 9.6
+        },
+        {
+          "action": "Home return",
+          "ms": 11.6
+        },
+        {
+          "action": "Refresh complete",
+          "ms": 166.4
+        },
+        {
+          "action": "Map open",
+          "ms": 10.5
+        },
+        {
+          "action": "Home return",
+          "ms": 10.9
+        }
+      ],
+      [
+        {
+          "action": "Home ready",
+          "ms": 291
+        },
+        {
+          "action": "Search open",
+          "ms": 12.2
+        },
+        {
+          "action": "Nearest stops",
+          "ms": 7.4
+        },
+        {
+          "action": "Trip results",
+          "ms": 934.5
+        },
+        {
+          "action": "Bus details",
+          "ms": 9.7
+        },
+        {
+          "action": "Map open",
+          "ms": 16.1
+        },
+        {
+          "action": "Map options",
+          "ms": 6
+        },
+        {
+          "action": "Browse stops",
+          "ms": 6.4
+        },
+        {
+          "action": "Home return",
+          "ms": 6.9
+        },
+        {
+          "action": "Refresh complete",
+          "ms": 162.8
+        },
+        {
+          "action": "Map open",
+          "ms": 6.4
+        },
+        {
+          "action": "Home return",
+          "ms": 4.6
+        }
+      ],
+      [
+        {
+          "action": "Home ready",
+          "ms": 252.8
+        },
+        {
+          "action": "Search open",
+          "ms": 11.6
+        },
+        {
+          "action": "Nearest stops",
+          "ms": 8.7
+        },
+        {
+          "action": "Trip results",
+          "ms": 939.5
+        },
+        {
+          "action": "Bus details",
+          "ms": 11.9
+        },
+        {
+          "action": "Map open",
+          "ms": 14.1
+        },
+        {
+          "action": "Map options",
+          "ms": 9.9
+        },
+        {
+          "action": "Browse stops",
+          "ms": 8.7
+        },
+        {
+          "action": "Home return",
+          "ms": 6
+        },
+        {
+          "action": "Refresh complete",
+          "ms": 165.1
+        },
+        {
+          "action": "Map open",
+          "ms": 10.8
+        },
+        {
+          "action": "Home return",
+          "ms": 10.5
+        }
+      ]
+    ],
+    "routing": {
+      "ref": "e411bed",
+      "delayMs": 150,
+      "runs": [
+        {
+          "ms": 1230,
+          "requests": 8,
+          "peak": 1,
+          "recommended": "bus",
+          "busMinutes": 6,
+          "walkMinutes": 14,
+          "stops": [
+            [
+              "Stop B",
+              "Stop C"
+            ]
+          ]
+        },
+        {
+          "ms": 1218,
+          "requests": 8,
+          "peak": 1,
+          "recommended": "bus",
+          "busMinutes": 6,
+          "walkMinutes": 14,
+          "stops": [
+            [
+              "Stop B",
+              "Stop C"
+            ]
+          ]
+        },
+        {
+          "ms": 1217,
+          "requests": 8,
+          "peak": 1,
+          "recommended": "bus",
+          "busMinutes": 6,
+          "walkMinutes": 14,
+          "stops": [
+            [
+              "Stop B",
+              "Stop C"
+            ]
+          ]
+        }
+      ]
+    },
+    "api": {
+      "ref": "e411bed",
+      "fixtureStops": 500,
+      "bytes": 30303,
+      "encoding": "identity",
+      "freshness": "public, max-age=300"
+    }
+  },
+  "after": {
+    "lighthouseVersion": "13.5.0",
+    "throttling": {
+      "rttMs": 150,
+      "throughputKbps": 1638.4,
+      "requestLatencyMs": 562.5,
+      "downloadThroughputKbps": 1474.5600000000002,
+      "uploadThroughputKbps": 675,
+      "cpuSlowdownMultiplier": 4
+    },
+    "screenEmulation": {
+      "mobile": true,
+      "width": 412,
+      "height": 823,
+      "deviceScaleFactor": 1.75,
+      "disabled": false
+    },
+    "initialJsGzipBytes": 92834,
+    "medianPerformanceScore": 99,
+    "medianMetrics": {
+      "first-contentful-paint": 1515.7381,
+      "largest-contentful-paint": 1665.7381,
+      "speed-index": 1515.7381,
+      "total-blocking-time": 0,
+      "cumulative-layout-shift": 0.03456496138236417
+    },
+    "medianInitialTransferBytes": 118154,
+    "medianInteractionsMs": {
+      "Home ready": 207.6,
+      "Search open": 9.9,
+      "Nearest stops": 7,
+      "Trip results": 321.4,
+      "Bus details": 10.7,
+      "Map open": 6.8,
+      "Map options": 7.2,
+      "Browse stops": 9.2,
+      "Home return": 9.5,
+      "Refresh complete": 162.1
+    },
+    "lighthouseRuns": [
+      {
+        "score": 99,
+        "metrics": {
+          "first-contentful-paint": 1515.7381,
+          "largest-contentful-paint": 1665.7381,
+          "speed-index": 1515.7381,
+          "total-blocking-time": 0.5,
+          "cumulative-layout-shift": 0.03456496138236417
+        }
+      },
+      {
+        "score": 99,
+        "metrics": {
+          "first-contentful-paint": 1505.3622,
+          "largest-contentful-paint": 1655.3622,
+          "speed-index": 1505.3622,
+          "total-blocking-time": 0,
+          "cumulative-layout-shift": 0.03456496138236417
+        }
+      },
+      {
+        "score": 99,
+        "metrics": {
+          "first-contentful-paint": 1515.8336,
+          "largest-contentful-paint": 1665.8336,
+          "speed-index": 1515.8336,
+          "total-blocking-time": 0,
+          "cumulative-layout-shift": 0.03456496138236417
+        }
+      }
+    ],
+    "interactionRuns": [
+      [
+        {
+          "action": "Home ready",
+          "ms": 215.4
+        },
+        {
+          "action": "Search open",
+          "ms": 7.9
+        },
+        {
+          "action": "Nearest stops",
+          "ms": 4.6
+        },
+        {
+          "action": "Trip results",
+          "ms": 320.5
+        },
+        {
+          "action": "Bus details",
+          "ms": 11
+        },
+        {
+          "action": "Map open",
+          "ms": 10.1
+        },
+        {
+          "action": "Map options",
+          "ms": 7.2
+        },
+        {
+          "action": "Browse stops",
+          "ms": 10.2
+        },
+        {
+          "action": "Home return",
+          "ms": 7.5
+        },
+        {
+          "action": "Refresh complete",
+          "ms": 162.1
+        },
+        {
+          "action": "Map open",
+          "ms": 4.7
+        },
+        {
+          "action": "Home return",
+          "ms": 9.9
+        }
+      ],
+      [
+        {
+          "action": "Home ready",
+          "ms": 207.6
+        },
+        {
+          "action": "Search open",
+          "ms": 9.9
+        },
+        {
+          "action": "Nearest stops",
+          "ms": 7
+        },
+        {
+          "action": "Trip results",
+          "ms": 321.4
+        },
+        {
+          "action": "Bus details",
+          "ms": 10.7
+        },
+        {
+          "action": "Map open",
+          "ms": 6.1
+        },
+        {
+          "action": "Map options",
+          "ms": 9.9
+        },
+        {
+          "action": "Browse stops",
+          "ms": 4.8
+        },
+        {
+          "action": "Home return",
+          "ms": 7
+        },
+        {
+          "action": "Refresh complete",
+          "ms": 160.7
+        },
+        {
+          "action": "Map open",
+          "ms": 9.7
+        },
+        {
+          "action": "Home return",
+          "ms": 9.5
+        }
+      ],
+      [
+        {
+          "action": "Home ready",
+          "ms": 198.7
+        },
+        {
+          "action": "Search open",
+          "ms": 12.2
+        },
+        {
+          "action": "Nearest stops",
+          "ms": 7.8
+        },
+        {
+          "action": "Trip results",
+          "ms": 321.6
+        },
+        {
+          "action": "Bus details",
+          "ms": 10.4
+        },
+        {
+          "action": "Map open",
+          "ms": 6.8
+        },
+        {
+          "action": "Map options",
+          "ms": 6.8
+        },
+        {
+          "action": "Browse stops",
+          "ms": 9.2
+        },
+        {
+          "action": "Home return",
+          "ms": 6.3
+        },
+        {
+          "action": "Refresh complete",
+          "ms": 165.3
+        },
+        {
+          "action": "Map open",
+          "ms": 6.5
+        },
+        {
+          "action": "Home return",
+          "ms": 10.1
+        }
+      ]
+    ],
+    "routing": {
+      "ref": "working-tree",
+      "delayMs": 150,
+      "runs": [
+        {
+          "ms": 468,
+          "requests": 8,
+          "peak": 4,
+          "recommended": "bus",
+          "busMinutes": 6,
+          "walkMinutes": 14,
+          "stops": [
+            [
+              "Stop B",
+              "Stop C"
+            ]
+          ]
+        },
+        {
+          "ms": 462,
+          "requests": 8,
+          "peak": 4,
+          "recommended": "bus",
+          "busMinutes": 6,
+          "walkMinutes": 14,
+          "stops": [
+            [
+              "Stop B",
+              "Stop C"
+            ]
+          ]
+        },
+        {
+          "ms": 455,
+          "requests": 8,
+          "peak": 4,
+          "recommended": "bus",
+          "busMinutes": 6,
+          "walkMinutes": 14,
+          "stops": [
+            [
+              "Stop B",
+              "Stop C"
+            ]
+          ]
+        }
+      ]
+    },
+    "api": {
+      "ref": "working-tree",
+      "fixtureStops": 500,
+      "bytes": 2672,
+      "encoding": "gzip",
+      "freshness": "public, max-age=300"
+    }
+  }
+}
